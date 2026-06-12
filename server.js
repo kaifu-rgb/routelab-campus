@@ -4,22 +4,17 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
-const multer = require("multer");
 const session = require("express-session");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = __dirname;
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "data");
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(ROOT, "uploads", "videos");
-const SEED_VIDEO_DIR = path.join(ROOT, "seed-videos");
-const SEED_VIDEOS_FILE = path.join(SEED_VIDEO_DIR, "videos.json");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
 const VIDEOS_FILE = path.join(DATA_DIR, "videos.json");
 const SERVICE_NAME = "RouteLab Campus";
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 function normalizeList(value) {
   if (Array.isArray(value)) return value;
@@ -54,25 +49,12 @@ function verifyPassword(password, stored) {
   return expected.length === candidate.length && crypto.timingSafeEqual(expected, candidate);
 }
 
-function slugFileName(originalName) {
-  const extension = path.extname(originalName).toLowerCase();
-  return `${Date.now()}-${crypto.randomBytes(5).toString("hex")}${extension}`;
-}
-
 function users() {
   return normalizeList(readJson(USERS_FILE, []));
 }
 
 function videos() {
-  const savedVideos = normalizeList(readJson(VIDEOS_FILE, []));
-  const seedVideos = normalizeList(readJson(SEED_VIDEOS_FILE, []));
-  const seen = new Set();
-  return [...savedVideos, ...seedVideos].filter((video) => {
-    const key = video.filename || video.id;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  return normalizeList(readJson(VIDEOS_FILE, []));
 }
 
 function saveUsers(nextUsers) {
@@ -90,6 +72,7 @@ function seedAdmin() {
   const email = process.env.ADMIN_EMAIL || "admin@example.com";
   const generatedPassword = crypto.randomBytes(12).toString("base64url");
   const password = process.env.ADMIN_PASSWORD || generatedPassword;
+
   existing.push({
     id: crypto.randomUUID(),
     name: "管理者",
@@ -104,27 +87,41 @@ function seedAdmin() {
   if (!process.env.ADMIN_PASSWORD) {
     fs.writeFileSync(
       path.join(DATA_DIR, "initial-admin-login.txt"),
-      `Login URL: http://localhost:${PORT}/login\nEmail: ${email}\nPassword: ${password}\n\nAfter logging in, set ADMIN_EMAIL and ADMIN_PASSWORD in .env before using this in production.\n`,
+      `Login URL: http://localhost:${PORT}/login\nEmail: ${email}\nPassword: ${password}\n`,
       "utf8",
     );
   }
-  console.log(`Admin account created: ${email}`);
+}
+
+function extractYouTubeId(rawUrl) {
+  const value = String(rawUrl || "").trim();
+  if (!value) return "";
+
+  try {
+    const url = new URL(value);
+    const host = url.hostname.replace(/^www\./, "");
+
+    if (host === "youtu.be") {
+      return url.pathname.split("/").filter(Boolean)[0] || "";
+    }
+
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
+      if (url.pathname === "/watch") return url.searchParams.get("v") || "";
+      const parts = url.pathname.split("/").filter(Boolean);
+      if (["embed", "shorts", "live"].includes(parts[0])) return parts[1] || "";
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+}
+
+function youtubeEmbedUrl(videoId) {
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?rel=0&modestbranding=1`;
 }
 
 seedAdmin();
-
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, callback) => callback(null, UPLOAD_DIR),
-    filename: (_req, file, callback) => callback(null, slugFileName(file.originalname)),
-  }),
-  limits: { fileSize: 1024 * 1024 * 1500 },
-  fileFilter: (_req, file, callback) => {
-    const allowed = [".mp4", ".mov", ".m4v", ".webm"];
-    const extension = path.extname(file.originalname).toLowerCase();
-    callback(null, allowed.includes(extension));
-  },
-});
 
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -225,8 +222,8 @@ app.get("/login", (req, res) => {
       "ログイン",
       `<section class="auth-card">
         <p class="eyebrow">Members</p>
-        <h1>学習動画にログイン</h1>
-        <p class="lead">管理者から発行されたメールアドレスとパスワードで、会員専用の動画ルームに入れます。</p>
+        <h1>動画ルームにログイン</h1>
+        <p class="lead">会員専用の授業動画と学習ルートを確認できます。</p>
         ${message}
         <form class="form-grid" action="/login" method="post">
           <input type="hidden" name="next" value="${escapeHtml(next)}" />
@@ -258,13 +255,20 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/library", requireLogin, (req, res) => {
-  const visibleVideos = videos().filter((video) => video.published);
+  const visibleVideos = videos().filter((video) => video.published && video.youtubeId);
   const cards = visibleVideos.length
     ? visibleVideos
         .map(
           (video) => `<article class="video-card">
-            <video controls preload="metadata" src="/media/${escapeHtml(video.filename)}"></video>
-            <div>
+            <div class="youtube-frame">
+              <iframe
+                src="${youtubeEmbedUrl(video.youtubeId)}"
+                title="${escapeHtml(video.title)}"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+                loading="lazy"></iframe>
+            </div>
+            <div class="video-copy">
               <p class="meta">${escapeHtml(video.course || "動画講座")}</p>
               <h3>${escapeHtml(video.title)}</h3>
               <p class="muted">${escapeHtml(video.description)}</p>
@@ -272,7 +276,7 @@ app.get("/library", requireLogin, (req, res) => {
           </article>`,
         )
         .join("")
-    : `<p class="alert">まだ公開中の動画がありません。管理画面からアップロードするとここに表示されます。</p>`;
+    : `<p class="alert">公開中の動画は準備中です。</p>`;
 
   res.send(
     page(
@@ -280,7 +284,7 @@ app.get("/library", requireLogin, (req, res) => {
       `<section class="library-hero">
         <div>
           <p class="eyebrow">Video Library</p>
-          <h1>今日見る動画が、すぐ見つかる。</h1>
+          <h1>今日の学習に、すぐ入れる。</h1>
           <p class="lead">授業、復習、確認テストの解説を会員専用でまとめています。</p>
         </div>
         <div class="library-stat">
@@ -291,7 +295,7 @@ app.get("/library", requireLogin, (req, res) => {
       <section class="video-section">
         <div class="section-title">
           <h2>動画ライブラリ</h2>
-          <p>ログイン中: ${escapeHtml(req.user.name)}</p>
+          <p>${escapeHtml(req.user.name)} さん</p>
         </div>
         <div class="video-grid">${cards}</div>
       </section>`,
@@ -299,17 +303,6 @@ app.get("/library", requireLogin, (req, res) => {
       "library-page",
     ),
   );
-});
-
-app.get("/media/:filename", requireLogin, (req, res) => {
-  const video = videos().find((candidate) => candidate.filename === req.params.filename && candidate.published);
-  if (!video) {
-    res.status(404).send("Not found");
-    return;
-  }
-  const uploadedPath = path.join(UPLOAD_DIR, video.filename);
-  const seedPath = path.join(SEED_VIDEO_DIR, video.filename);
-  res.sendFile(fs.existsSync(uploadedPath) ? uploadedPath : seedPath);
 });
 
 app.get("/admin", requireAdmin, (req, res) => {
@@ -343,19 +336,19 @@ app.get("/admin", requireAdmin, (req, res) => {
         <div>
           <p class="eyebrow">Admin</p>
           <h1>管理画面</h1>
-          <p class="lead">会員発行と動画アップロードをここで行います。</p>
+          <p class="lead">会員と動画を管理できます。</p>
         </div>
         ${flash(req)}
         <div class="grid">
           <article class="panel">
-            <h2>動画をアップロード</h2>
-            <form class="form-grid" action="/admin/videos" method="post" enctype="multipart/form-data">
+            <h2>動画を追加</h2>
+            <form class="form-grid" action="/admin/videos" method="post">
               <label>タイトル<input name="title" required placeholder="例: 数学 関数の基礎" /></label>
-              <label>コース・分類<input name="course" placeholder="例: 中3数学 / 確認テスト解説" /></label>
-              <label>説明<textarea name="description" placeholder="動画の内容や見るタイミング"></textarea></label>
-              <label>動画ファイル<input type="file" name="video" accept="video/mp4,video/webm,video/quicktime,.m4v" required /></label>
-              <label>公開状態<select name="published"><option value="true">すぐ公開する</option><option value="false">非公開で保存</option></select></label>
-              <button class="button primary" type="submit">アップロード</button>
+              <label>コース・分類<input name="course" placeholder="例: 中3数学 / 復習動画" /></label>
+              <label>YouTube URL<input type="url" name="youtubeUrl" required placeholder="https://youtu.be/..." /></label>
+              <label>説明<textarea name="description" placeholder="動画の内容を短く入力"></textarea></label>
+              <label>公開状態<select name="published"><option value="true">公開する</option><option value="false">非公開で保存</option></select></label>
+              <button class="button primary" type="submit">追加する</button>
             </form>
           </article>
           <article class="panel">
@@ -382,27 +375,30 @@ app.get("/admin", requireAdmin, (req, res) => {
   );
 });
 
-app.post("/admin/videos", requireAdmin, upload.single("video"), (req, res) => {
-  if (!req.file) {
-    req.session.flash = "動画ファイルを選択してください。";
+app.post("/admin/videos", requireAdmin, (req, res) => {
+  const youtubeUrl = String(req.body.youtubeUrl || "").trim();
+  const youtubeId = extractYouTubeId(youtubeUrl);
+
+  if (!youtubeId) {
+    req.session.flash = "YouTubeのURLを確認してください。";
     res.redirect("/admin");
     return;
   }
 
-  const nextVideos = videos();
+  const nextVideos = videos().filter((video) => video.id !== "seed-229850");
   nextVideos.unshift({
     id: crypto.randomUUID(),
     title: String(req.body.title || "").trim(),
     course: String(req.body.course || "").trim(),
     description: String(req.body.description || "").trim(),
-    filename: req.file.filename,
-    originalName: req.file.originalname,
+    youtubeUrl,
+    youtubeId,
     published: req.body.published === "true",
     createdAt: new Date().toISOString(),
     createdBy: req.user.id,
   });
   saveVideos(nextVideos);
-  req.session.flash = "動画をアップロードしました。";
+  req.session.flash = "動画を追加しました。";
   res.redirect("/admin");
 });
 

@@ -12,7 +12,7 @@ GitHub Student Developer Packから無料ドメインを取得できます。
 
 ## 公開先
 
-このサイトはNode.js/Expressでログインと動画配信をしているため、GitHub Pagesでは動きません。無料で始めるならRenderのWeb Serviceが扱いやすいです。
+このサイトはNode.js/Expressでログインと会員ページを動かすため、GitHub Pagesだけでは動きません。無料で始めるならRenderのWeb Serviceが扱いやすいです。
 
 1. GitHubにこのフォルダをプライベートリポジトリとしてpushします。
 2. Renderで「New Web Service」を作成します。
@@ -32,6 +32,6 @@ DNS反映後、Render側でHTTPSが有効になります。
 
 ## 注意
 
-Render無料枠はローカルファイルの永続保存ができません。管理画面からアップロードした動画は、再デプロイや再起動で消える可能性があります。
+動画本体はYouTube限定公開に置き、サイトにはURLだけを登録します。そのためRender無料枠でも動画ファイルの保存容量を気にせず運用できます。
 
-本運用で動画を増やす場合は、動画保存先をS3/Cloudinary等に変えるか、永続ディスク付きのホスティングに移すのがおすすめです。
+YouTube限定公開URLが外部に共有されると、YouTube上では視聴できる点に注意してください。
