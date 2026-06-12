@@ -1,0 +1,586 @@
+﻿<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="RouteLab Campusは、志望校から逆算した学習設計と会員専用の動画ライブラリで、高校受験の毎週の勉強を進めるオンライン学習キャンパスです。"
+    />
+    <title>RouteLab Campus | 会員制の高校受験動画キャンパス</title>
+    <link rel="stylesheet" href="styles.css?v=20260530-programs" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="RouteLab Campus トップへ">
+        <img class="brand-logo" src="assets/routelab-campus-logo.svg" alt="RouteLab Campus" />
+      </a>
+      <nav class="nav" aria-label="主要メニュー">
+        <a href="routes.html">参考書ルート</a>
+        <a href="books.html">参考書紹介</a>
+        <a href="#programs">講座紹介</a>
+        <a href="teacher.html">講師紹介</a>
+        <a href="#results">合格実績</a>
+        <a href="/login">会員ログイン</a>
+        <a href="#contact">無料相談</a>
+      </nav>
+      <a class="header-cta" href="/login">動画ルームへ</a>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <canvas class="light-canvas" id="lightCanvas" aria-hidden="true"></canvas>
+        <div class="hero-copy">
+          <p class="eyebrow">RouteLab Campus</p>
+          <h1><span class="accent-line">授業動画と学習ルートを</span><span>ひとつのキャンパスに。</span></h1>
+          <p class="lead">
+            受験勉強で一番困るのは、やる気よりも<strong>「今日なにを、どこまでやるか」</strong>が曖昧なこと。
+            RouteLab Campusは、志望校から逆算した参考書ルートと会員専用動画を組み合わせ、
+            <strong>ログインすれば今日の学習に入れる状態</strong>をつくります。
+          </p>
+          <div class="hero-badges" aria-label="主な特徴">
+            <span>会員専用動画</span>
+            <span>志望校別ルート</span>
+            <span>週次チェック</span>
+          </div>
+          <div class="hero-actions">
+            <a class="button primary" href="/login">動画ルームに入る</a>
+            <a class="button secondary" href="#contact">無料相談を予約する</a>
+          </div>
+        </div>
+        <div class="hero-visual" aria-label="学習する中学生のイメージ">
+          <img src="assets/hero-student-route.png" alt="参考書で学習する中学生" />
+        </div>
+      </section>
+
+      <section class="message-strip" aria-label="学習設計の考え方">
+        <div>
+          <span>今日の一歩が、合格につながる。</span>
+          <strong>道筋が見えるから、続けられる。</strong>
+        </div>
+        <p>教材・動画・復習・確認テストを一週間単位で設計し、毎日の勉強を迷わず始められる状態にします。</p>
+      </section>
+
+      <section class="promise-strip" aria-label="埼玉高校受験ラボの特徴">
+        <div>
+          <strong>何をする塾？</strong>
+          <span>志望校までの学習計画を毎週つくる塾</span>
+        </div>
+        <div>
+          <strong>何ができる？</strong>
+          <span>5教科の教材・動画・確認テストを管理</span>
+        </div>
+        <div>
+          <strong>何になれる？</strong>
+          <span>一人で勉強を進められる受験生へ</span>
+        </div>
+      </section>
+
+      <section class="consult-band" aria-label="無料相談への案内">
+        <div>
+          <p class="eyebrow">無料学習診断</p>
+          <h2>最初に決めるのは、教材ではなく「進め方」です。</h2>
+          <p>志望校、内申、模試、今の教材を見て、<strong>次の4週間で取り組む学習ルート</strong>を整理します。</p>
+        </div>
+        <a class="button primary" href="#contact">問い合わせる</a>
+      </section>
+
+      <section class="visual-story" aria-label="学習が変わるイメージ">
+        <article class="visual-story-card">
+          <img src="assets/study-colorful-student.png" alt="教材を広げて学習する中学生" />
+          <div>
+            <span>01</span>
+            <h2>迷う時間を、勉強時間に変える。</h2>
+            <p>やる教材、ページ数、復習日まで決まっているから、机に向かった瞬間から始められます。</p>
+          </div>
+        </article>
+        <article class="visual-story-card accent">
+          <img src="assets/route-planning-board.png" alt="学習ルートを整理する計画表" />
+          <div>
+            <span>02</span>
+            <h2>努力を、見える形で積み上げる。</h2>
+            <p>毎週の確認テストで、できた単元と戻る単元をはっきりさせます。</p>
+          </div>
+        </article>
+        <article class="visual-story-card">
+          <img src="assets/essay-photo.png" alt="答案を確認する手元" />
+          <div>
+            <span>03</span>
+            <h2>必要な時だけ、深く伸ばす。</h2>
+            <p>国語・作文・志望理由書は選択コースとして、必要な生徒に必要なだけ追加できます。</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="subject-board" aria-label="対応科目と管理内容">
+        <div class="section-heading centered">
+          <p class="eyebrow">対応領域</p>
+          <h2>5教科の学習を、コースではなく「毎週の行動」に変える。</h2>
+          <p>科目ごとの勉強をバラバラにせず、参考書・映像授業・確認テストに分けて管理します。</p>
+        </div>
+        <div class="subject-grid">
+          <article class="subject-card japanese">
+            <span>国語</span>
+            <h3>読解・作文</h3>
+            <p>必要な生徒は、記述・作文・志望理由書まで選択コースで対応。</p>
+          </article>
+          <article class="subject-card english">
+            <span>英語</span>
+            <h3>単語・文法・長文</h3>
+            <p>暗記量と長文演習を分け、毎週の確認で定着を見ます。</p>
+          </article>
+          <article class="subject-card math">
+            <span>数学</span>
+            <h3>計算・関数・図形</h3>
+            <p>例題理解から入試演習まで、単元別に戻れるルートを作ります。</p>
+          </article>
+          <article class="subject-card science">
+            <span>理科</span>
+            <h3>暗記・計算</h3>
+            <p>知識単元と計算単元を分け、資料問題まで確認します。</p>
+          </article>
+          <article class="subject-card social">
+            <span>社会</span>
+            <h3>用語・資料・記述</h3>
+            <p>一問一答で終わらせず、地図・年表・グラフに接続します。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="image-marquee" aria-label="指導メニューのスライダー">
+        <div class="marquee-track">
+          <article class="marquee-card">
+            <img src="assets/study-colorful-student.png" alt="カラフルな教材で学習する中学生" />
+            <div><span>映像授業</span><h3>授業をコンテンツ化し、部活後でも復習できる</h3></div>
+          </article>
+          <article class="marquee-card">
+            <img src="assets/route-planning-board.png" alt="参考書ルートを整理した学習計画" />
+            <div><span>参考書ルート</span><h3>志望校から逆算し、やる教材と順番を決める</h3></div>
+          </article>
+          <article class="marquee-card">
+            <img src="assets/essay-photo.png" alt="答案添削をしている手元" />
+            <div><span>確認テスト</span><h3>見ただけで終わらせず、定着度を毎週確認する</h3></div>
+          </article>
+          <article class="marquee-card">
+            <img src="assets/statement-photo.png" alt="志望理由書を相談している様子" />
+            <div><span>選択コース</span><h3>必要な生徒には、国語・作文・志望理由書まで対応</h3></div>
+          </article>
+          <article class="marquee-card" aria-hidden="true">
+            <img src="assets/study-colorful-student.png" alt="" />
+            <div><span>映像授業</span><h3>授業をコンテンツ化し、部活後でも復習できる</h3></div>
+          </article>
+          <article class="marquee-card" aria-hidden="true">
+            <img src="assets/route-planning-board.png" alt="" />
+            <div><span>参考書ルート</span><h3>志望校から逆算し、やる教材と順番を決める</h3></div>
+          </article>
+          <article class="marquee-card" aria-hidden="true">
+            <img src="assets/essay-photo.png" alt="" />
+            <div><span>確認テスト</span><h3>見ただけで終わらせず、定着度を毎週確認する</h3></div>
+          </article>
+          <article class="marquee-card" aria-hidden="true">
+            <img src="assets/statement-photo.png" alt="" />
+            <div><span>選択コース</span><h3>必要な生徒には、国語・作文・志望理由書まで対応</h3></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section service-overview">
+        <div class="section-heading centered">
+          <p class="eyebrow">できること</p>
+          <h2>勉強を「やるべきこと」まで分解し、毎週前に進めます。</h2>
+        </div>
+        <div class="service-grid">
+          <article>
+            <span>01</span>
+            <h3>学習診断</h3>
+            <p>志望校、内申、模試、部活の忙しさを確認し、最初に伸ばすべき科目と単元を決めます。</p>
+            <a href="#hybrid">詳しく見る</a>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>参考書ルート</h3>
+            <p>教材をただ渡すのではなく、順番・期限・解き直し日まで決めて、毎日の勉強に落とし込みます。</p>
+            <a href="routes.html">詳しく見る</a>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>週次チェック</h3>
+            <p>確認テストと面談で、やった内容が定着しているかを確認。遅れた週はルートを組み直します。</p>
+            <a href="books.html">教材を見る</a>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>選択コース</h3>
+            <p>必要に応じて、国語読解、作文、志望理由書、過去問演習などを追加できます。</p>
+            <a href="teacher.html">講師を見る</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="section method-section">
+        <div class="section-heading centered">
+          <p class="eyebrow">なれる状態</p>
+          <h2>「勉強しなきゃ」から、「今日はこれをやる」へ。</h2>
+        </div>
+        <div class="method-cards">
+          <article>
+            <strong>01</strong>
+            <h3>やることが明確</h3>
+            <p>机に向かってから迷う時間を減らし、毎日の学習を始めやすくします。</p>
+          </article>
+          <article>
+            <strong>02</strong>
+            <h3>できたか分かる</h3>
+            <p>確認テストで理解度を見える化し、やったつもりの勉強を減らします。</p>
+          </article>
+          <article>
+            <strong>03</strong>
+            <h3>直し方が分かる</h3>
+            <p>丸つけ、解き直し、暗記の仕方まで見直し、次の勉強に反映します。</p>
+          </article>
+          <article>
+            <strong>04</strong>
+            <h3>自分で進められる</h3>
+            <p>受験期までに、学習計画を理解して自分で動ける状態を目指します。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section route-visual-section">
+        <div class="route-visual-copy">
+          <p class="eyebrow">見える化</p>
+          <h2>教材・授業・復習を、ひとつの学習ルートにまとめる。</h2>
+          <p>
+            成績を上げるには、教材を増やすよりも<strong>「どの順番で、どこまで仕上げるか」</strong>が大切です。
+            埼玉高校受験ラボでは、参考書・映像授業・復習・確認テストを一つのルートにまとめ、
+            生徒が自分の現在地を分かる状態にします。
+          </p>
+          <div class="mini-stats" aria-label="学習管理のポイント">
+            <span><strong>5</strong>教科対応</span>
+            <span><strong>4</strong>週間単位で更新</span>
+            <span><strong>毎週</strong>確認テスト</span>
+          </div>
+        </div>
+        <div class="route-visual-frame">
+          <img src="assets/route-planning-board.png" alt="参考書ルートと週間計画のイメージ" />
+        </div>
+      </section>
+
+      <section class="section route-section" id="route">
+        <div class="section-heading centered">
+          <p class="eyebrow">学習ルート</p>
+          <h2>志望校までの距離を、週単位の計画に変える。</h2>
+          <p>浦和・大宮・一女・川越・春日部などの公立上位校、栄東・大宮開成・附属校などの私立対策まで、学力帯と残り期間に合わせてルートを分けます。</p>
+        </div>
+        <div class="route-board">
+          <article>
+            <span>STEP 1</span>
+            <h3>診断</h3>
+            <p>偏差値、内申、学習時間、苦手科目、志望校を確認。</p>
+          </article>
+          <article>
+            <span>STEP 2</span>
+            <h3>ルート作成</h3>
+            <p>参考書、映像授業、復習日、確認テストを週単位に分解。</p>
+          </article>
+          <article>
+            <span>STEP 3</span>
+            <h3>実行管理</h3>
+            <p>進捗確認と未達時のリカバリーで、計画倒れを防ぐ。</p>
+          </article>
+          <article>
+            <span>STEP 4</span>
+            <h3>過去問期</h3>
+            <p>過去問演習、時間配分、失点分析で最後の伸びを作る。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section hybrid-section" id="hybrid">
+        <div class="section-heading centered">
+          <p class="eyebrow">学習システム</p>
+          <h2>授業・演習・管理を分けて、受験勉強を止めない。</h2>
+          <p>
+            分かるための授業、できるようにする演習、続けるための管理。
+            それぞれの役割を分けることで、部活や学校行事がある時期でも学習を前に進めます。
+          </p>
+        </div>
+        <div class="hybrid-grid" id="system">
+          <article>
+            <span>映像授業</span>
+            <h3>短く復習できる授業</h3>
+            <p>重要単元を短く分け、分からないところへ戻りやすい形にします。</p>
+          </article>
+          <article>
+            <span>参考書</span>
+            <h3>手を動かす演習</h3>
+            <p>市販参考書を使い、入試までに必要な問題量を計画的に積み上げます。</p>
+          </article>
+          <article>
+            <span>学習管理</span>
+            <h3>進捗が見える管理</h3>
+            <p>確認テスト、進捗表、面談で、理解した内容を得点につなげます。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section exam-kokugo">
+        <div class="exam-kokugo-panel">
+          <p class="eyebrow">選択コース</p>
+          <h2>国語・作文・志望理由書は、必要な生徒だけ深く見る。</h2>
+          <p>
+            メインは5教科の学習設計と実行管理です。そのうえで、国語の記述や作文で差をつけたい生徒には、
+            添削型のコースを追加できます。
+          </p>
+        </div>
+        <div class="exam-points">
+          <article>
+            <h3>高校入試国語</h3>
+            <p>本文根拠、設問条件、選択肢のズレを確認し、安定して解ける読み方を作ります。</p>
+          </article>
+          <article>
+            <h3>作文・小論文</h3>
+            <p>附属校や推薦型で必要な文章を、構成・具体例・表現まで整えます。</p>
+          </article>
+          <article>
+            <h3>志望理由書</h3>
+            <p>活動経験、志望理由、入学後に学びたいことを整理し、伝わる文章にします。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section results-section" id="results">
+        <div class="section-heading centered">
+          <p class="eyebrow">合格実績</p>
+          <h2>主な合格実績</h2>
+          <p>高校受験部と大学受験部に分けて、主な進学先・合格校を掲載しています。詳細は面談時にご確認ください。</p>
+        </div>
+        <div class="results-columns">
+          <section class="results-group" aria-labelledby="highschool-results">
+            <h3 id="highschool-results">高校受験部</h3>
+            <ul class="results-list" aria-label="高校受験部の主な合格実績">
+              <li>浦和高校</li>
+              <li>大宮高校</li>
+              <li>浦和第一女子高校</li>
+              <li>春日部高校</li>
+              <li>川越高校</li>
+              <li>栄東高校</li>
+              <li>中央大学杉並高校</li>
+              <li>法政大学附属高校</li>
+              <li>大宮開成高校</li>
+              <li>その他多数</li>
+            </ul>
+          </section>
+          <section class="results-group" aria-labelledby="university-results">
+            <h3 id="university-results">大学受験部</h3>
+            <ul class="results-list" aria-label="大学受験部の主な合格実績">
+              <li>東京大学</li>
+              <li>一橋大学</li>
+              <li>早稲田大学</li>
+              <li>慶應義塾大学</li>
+              <li>明治大学</li>
+              <li>青山学院大学</li>
+              <li>その他国公立大学</li>
+            </ul>
+          </section>
+        </div>
+      </section>
+
+      <section class="section program-section" id="programs">
+        <div class="section-heading centered">
+          <p class="eyebrow">講座紹介</p>
+          <h2>目的に合わせて、必要な講座を組み合わせる。</h2>
+          <p>中心は5教科の学習管理。そこに、映像授業・確認テスト・国語作文系の選択講座を足していきます。</p>
+        </div>
+        <div class="program-layout">
+          <article class="program-main">
+            <div>
+              <span>MAIN COURSE</span>
+              <h3>5教科ルート管理講座</h3>
+              <p>
+                志望校から逆算して、英語・数学・国語・理科・社会の学習計画を週単位で設計します。
+                参考書、映像授業、復習、確認テストを一つのルートにまとめ、毎週の面談で進み具合を確認します。
+              </p>
+              <ul class="check-list">
+                <li>志望校別の学習ルート作成</li>
+                <li>毎週の宿題指定と確認テスト</li>
+                <li>模試・定期テスト後のルート更新</li>
+              </ul>
+            </div>
+            <img src="assets/route-planning-board.png" alt="5教科ルート管理講座の学習計画イメージ" />
+          </article>
+          <div class="program-list">
+            <article>
+              <span>VIDEO</span>
+              <h3>映像授業講座</h3>
+              <p>苦手単元を短い授業で確認し、参考書演習へつなげる講座です。</p>
+            </article>
+            <article>
+              <span>TEST</span>
+              <h3>確認テスト講座</h3>
+              <p>毎週の学習内容が定着しているかを見て、やり直す単元を明確にします。</p>
+            </article>
+            <article>
+              <span>KOKUGO</span>
+              <h3>国語読解・作文講座</h3>
+              <p>読解、記述、作文、小論文、志望理由書を必要に応じて追加できます。</p>
+            </article>
+            <article>
+              <span>PAST EXAM</span>
+              <h3>過去問演習講座</h3>
+              <p>時間配分、失点分析、復習教材への戻し込みまで行います。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section courses" id="courses">
+        <div class="section-heading centered">
+          <p class="eyebrow">料金プラン</p>
+          <h2>中心は5教科の学習管理。必要に応じてコースを追加。</h2>
+        </div>
+        <div class="course-grid">
+          <article class="course">
+            <h3>無料診断</h3>
+            <p class="price">無料</p>
+            <p>志望校、現在の教材、学習時間を確認し、最初の4週間の進め方を提案します。</p>
+          </article>
+          <article class="course featured">
+            <p class="badge">おすすめ</p>
+            <h3>5教科ルート管理</h3>
+            <p class="price">月 14,800円〜</p>
+            <p>参考書ルート、映像授業、週次チェック、確認テストを組み合わせて学習を管理します。</p>
+          </article>
+          <article class="course">
+            <h3>国語・作文コース</h3>
+            <p class="price">1回 3,980円〜</p>
+            <p>高校入試国語、作文、小論文、志望理由書を必要に応じて追加できます。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section flow-section">
+        <div class="section-heading centered">
+          <p class="eyebrow">体験までの流れ</p>
+          <h2>問い合わせから、最初の4週間の計画まで。</h2>
+        </div>
+        <ol class="flow-list">
+          <li><span>1</span>問い合わせフォームを送信</li>
+          <li><span>2</span>成績・志望校・学習状況を確認</li>
+          <li><span>3</span>最初の4週間の学習ルートを提案</li>
+          <li><span>4</span>確認テストと週次管理を開始</li>
+        </ol>
+      </section>
+
+      <section class="section faq-section">
+        <div class="section-heading centered">
+          <p class="eyebrow">よくある質問</p>
+          <h2>問い合わせ前の不安を減らします。</h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>個別指導はしないのですか？</summary>
+            <p>中心は参考書ルート、映像授業、確認テスト、週次管理です。必要に応じて、国語・作文・志望理由書などのコースを追加できます。</p>
+          </details>
+          <details>
+            <summary>全教科対応できますか？</summary>
+            <p>5教科対応です。英数理社は演習量と確認テストを中心に管理し、国語・作文は必要に応じて選択コースで扱います。</p>
+          </details>
+          <details>
+            <summary>無料診断では何をしますか？</summary>
+            <p>志望校、内申、模試結果、現在使っている教材、1週間の学習時間を確認し、最初の学習ルートを提案します。</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="section ai-chat-section" id="ai-chat">
+        <div>
+          <p class="eyebrow">問い合わせサポート</p>
+          <h2>問い合わせ前に、相談内容を整理できます。</h2>
+          <p>
+            右下のチャットは、問い合わせ前の整理用です。志望校、現在の成績、使っている参考書、困っている科目をまとめると、
+            無料相談で具体的なルートを提案しやすくなります。
+          </p>
+        </div>
+        <div class="ai-chat-card">
+          <h3>相談前に整理できること</h3>
+          <div class="chat-preview">
+            <div class="chat-bubble user">部活が忙しくて、何から始めればいいか分かりません。</div>
+            <div class="chat-bubble">志望校、現在の成績、使っている参考書を整理すると、最初のルートを提案しやすくなります。</div>
+            <div class="chat-bubble user">全教科見てもらえますか？</div>
+            <div class="chat-bubble">5教科の学習管理を中心に、必要なら国語・作文コースも追加できます。</div>
+          </div>
+          <a class="button outline chat-cta" href="#contact">問い合わせフォームへ</a>
+        </div>
+      </section>
+
+      <section class="section contact" id="contact">
+        <div class="contact-copy">
+          <p class="eyebrow">無料相談</p>
+          <h2>まずは志望校と、今の勉強を教えてください。</h2>
+          <p>現在の教材、成績、学習時間が分かると、最初の4週間で何を進めるべきか具体的に提案できます。</p>
+        </div>
+        <form class="contact-form" id="contactForm">
+          <label>
+            お名前
+            <input name="name" autocomplete="name" required placeholder="例: 山田 太郎" />
+          </label>
+          <div class="form-row">
+            <label>
+              メールアドレス
+              <input name="email" type="email" autocomplete="email" placeholder="例: info@example.com" />
+            </label>
+            <label>
+              電話番号
+              <input name="phone" type="tel" autocomplete="tel" placeholder="例: 090-1234-5678" />
+            </label>
+          </div>
+          <label>
+            学年
+            <select name="grade">
+              <option>中1</option>
+              <option>中2</option>
+              <option selected>中3</option>
+              <option>保護者</option>
+            </select>
+          </label>
+          <label>
+            相談したいメニュー
+            <select name="interest">
+              <option>高校受験ルート管理</option>
+              <option>映像授業＋参考書ルート</option>
+              <option>高校入試国語</option>
+              <option>作文・志望理由書添削</option>
+              <option>まだ決まっていない</option>
+            </select>
+          </label>
+          <fieldset class="subject-field">
+            <legend>気になる科目</legend>
+            <label><input type="checkbox" name="subjects" value="国語" checked /> 国語</label>
+            <label><input type="checkbox" name="subjects" value="英語" /> 英語</label>
+            <label><input type="checkbox" name="subjects" value="数学" /> 数学</label>
+            <label><input type="checkbox" name="subjects" value="理科" /> 理科</label>
+            <label><input type="checkbox" name="subjects" value="社会" /> 社会</label>
+          </fieldset>
+          <label>
+            相談したい内容
+            <textarea name="message" required placeholder="志望校、現在の成績、使っている参考書、困っている科目など"></textarea>
+          </label>
+          <button class="button primary" type="submit">問い合わせる</button>
+          <p class="form-status" id="formStatus" role="status"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>埼玉高校受験ラボ</p>
+      <p>映像授業・参考書ルート・週次管理で高校受験を攻略する</p>
+    </footer>
+
+    <script src="contact-config.js?v=20260529-contact"></script>
+    <script src="script.js?v=20260530-programs"></script>
+    <script src="dify-embed.js"></script>
+  </body>
+</html>
+
+

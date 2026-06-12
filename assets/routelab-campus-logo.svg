@@ -1,0 +1,14 @@
+<svg width="260" height="72" viewBox="0 0 260 72" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">RouteLab Campus</title>
+  <desc id="desc">A RouteLab Campus wordmark with a route and play symbol.</desc>
+  <rect width="260" height="72" rx="8" fill="white"/>
+  <g transform="translate(14 12)">
+    <rect x="0" y="0" width="48" height="48" rx="8" fill="#0F766E"/>
+    <path d="M15 34C15 24.5 21 23.5 27 22.5C33 21.5 35 18.5 35 14" stroke="#FDE68A" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="15" cy="34" r="4" fill="#FFFFFF"/>
+    <circle cx="35" cy="14" r="4" fill="#FFFFFF"/>
+    <path d="M23 15L23 31L34 23L23 15Z" fill="#FFFFFF"/>
+  </g>
+  <text x="76" y="33" fill="#10233F" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="800">RouteLab</text>
+  <text x="76" y="53" fill="#0F766E" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" letter-spacing="1.8">CAMPUS</text>
+</svg>
