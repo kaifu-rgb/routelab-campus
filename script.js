@@ -70,7 +70,7 @@ if (canvas) {
 
 document
   .querySelectorAll(
-    ".promise-strip, .message-strip, .consult-band, .visual-story-card, .subject-card, .marquee-card, .service-grid article, .method-cards article, .route-visual-section, .program-main, .program-list article, .route-board article, .hybrid-grid article, .exam-points article, .results-group, .course, .flow-list li, .faq-list details, .ai-chat-section, .contact",
+    ".promise-strip, .message-strip, .consult-band, .visual-story-card, .subject-card, .marquee-card, .service-grid article, .method-cards article, .route-visual-section, .program-main, .program-list article, .route-board article, .hybrid-grid article, .exam-points article, .results-group, .course, .offer-strip, .bundle-panel, .catalog-group, .mini-course, .flow-list li, .faq-list details, .ai-chat-section, .contact",
   )
   .forEach((element) => element.classList.add("reveal-on-scroll"));
 
@@ -101,7 +101,7 @@ function collectContactPayload(form) {
     interest: data.interest || "",
     subjects,
     message: (data.message || "").trim(),
-    source: "埼玉高校受験ラボ HP",
+    source: "RouteLab Campus HP",
     pageUrl: window.location.href,
     submittedAt: new Date().toISOString(),
   };

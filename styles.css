@@ -1342,6 +1342,264 @@ textarea {
   background: linear-gradient(180deg, #f1fff9, #ffffff);
 }
 
+.product-grid {
+  align-items: stretch;
+}
+
+.product-card {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.product-card .button {
+  align-self: end;
+  margin-top: 6px;
+}
+
+.offer-strip,
+.bundle-panel {
+  display: grid;
+  align-items: center;
+  gap: 18px;
+  max-width: 1120px;
+  margin: 0 auto 22px;
+  border: 1px solid #bfe7d7;
+  border-radius: 8px;
+  background: #f1fff9;
+  box-shadow: 0 16px 34px rgba(25, 37, 55, 0.08);
+}
+
+.offer-strip {
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 18px 22px;
+}
+
+.offer-strip strong {
+  display: inline-grid;
+  place-items: center;
+  min-height: 42px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: #102115;
+  background: var(--gold);
+  font-weight: 900;
+}
+
+.offer-strip span,
+.bundle-panel p,
+.catalog-heading p,
+.mini-course p {
+  color: var(--muted);
+}
+
+.bundle-panel {
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-top: 22px;
+  margin-bottom: 0;
+  padding: 26px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.96), rgba(241, 255, 249, 0.92)),
+    url("assets/route-planning-board.png") right center / 42% auto no-repeat;
+}
+
+.bundle-panel h3 {
+  margin-bottom: 8px;
+  font-size: clamp(24px, 2.8vw, 34px);
+}
+
+.course-thumb {
+  position: relative;
+  display: grid;
+  place-items: end start;
+  min-height: 158px;
+  padding: 18px;
+  border-radius: 8px;
+  overflow: hidden;
+  color: #ffffff;
+  background: #10233f;
+}
+
+.course-thumb::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 38%),
+    linear-gradient(180deg, transparent 10%, rgba(9, 24, 41, 0.76));
+}
+
+.course-thumb::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  width: 74px;
+  height: 74px;
+  border: 2px solid rgba(255, 255, 255, 0.34);
+  border-radius: 50%;
+}
+
+.course-thumb span {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: #ffffff;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.course-thumb.saitama {
+  background:
+    linear-gradient(135deg, rgba(12, 109, 95, 0.88), rgba(18, 51, 91, 0.9)),
+    url("assets/exam-study-photo.png") center / cover no-repeat;
+}
+
+.course-thumb.todai-bunka {
+  background:
+    linear-gradient(135deg, rgba(32, 55, 112, 0.9), rgba(159, 73, 104, 0.82)),
+    url("assets/statement-photo.png") center / cover no-repeat;
+}
+
+.course-thumb.todai-rika {
+  background:
+    linear-gradient(135deg, rgba(17, 80, 112, 0.9), rgba(19, 132, 101, 0.82)),
+    url("assets/route-planning-board.png") center / cover no-repeat;
+}
+
+.course-thumb.writing,
+.course-thumb.kokugo {
+  background:
+    linear-gradient(135deg, rgba(154, 73, 104, 0.86), rgba(16, 35, 63, 0.88)),
+    url("assets/essay-photo.png") center / cover no-repeat;
+}
+
+.course-thumb.coaching {
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.88), rgba(255, 135, 181, 0.48)),
+    url("assets/study-colorful-student.png") center / cover no-repeat;
+}
+
+.mini-list {
+  display: grid;
+  gap: 8px;
+  padding-left: 1.1em;
+  margin: 0;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.catalog-section {
+  background: #fbfdf9;
+}
+
+.catalog-group {
+  max-width: 1180px;
+  margin: 0 auto 34px;
+}
+
+.catalog-group:last-child {
+  margin-bottom: 0;
+}
+
+.catalog-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(260px, 0.28fr);
+  gap: 22px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.catalog-heading h3 {
+  margin-bottom: 0;
+  font-size: clamp(24px, 2.7vw, 34px);
+}
+
+.catalog-heading p {
+  margin-bottom: 0;
+  font-weight: 800;
+}
+
+.mini-course-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.todai-catalog {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.mini-course {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 34px rgba(25, 37, 55, 0.08);
+}
+
+.mini-course h4 {
+  min-height: 54px;
+  margin: 0;
+  color: #183454;
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.mini-course p {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.mini-course strong {
+  color: var(--green);
+  font-size: 18px;
+}
+
+.course-thumb.mini {
+  min-height: 112px;
+  padding: 14px;
+}
+
+.course-thumb.mini::after {
+  width: 50px;
+  height: 50px;
+}
+
+.course-thumb.japanese {
+  background: linear-gradient(135deg, #b34870, #10233f);
+}
+
+.course-thumb.math {
+  background: linear-gradient(135deg, #245ba8, #0f766e);
+}
+
+.course-thumb.english {
+  background: linear-gradient(135deg, #2372b9, #8c5fbf);
+}
+
+.course-thumb.science {
+  background: linear-gradient(135deg, #0f766e, #9a6b00);
+}
+
+.course-thumb.social {
+  background: linear-gradient(135deg, #6b5bbd, #17385f);
+}
+
+.course-thumb.listening {
+  background: linear-gradient(135deg, #10233f, #22a06b);
+}
+
+.course-thumb.classic {
+  background: linear-gradient(135deg, #7a4b24, #b34870);
+}
+
+.personal-section {
+  background: #ffffff;
+}
+
 .price {
   color: var(--ink) !important;
   font-size: 28px;
@@ -1597,6 +1855,9 @@ textarea {
   .promise-strip,
   .message-strip,
   .consult-band,
+  .offer-strip,
+  .bundle-panel,
+  .catalog-heading,
   .visual-story,
   .photo-feature,
   .route-visual-section,
@@ -1640,6 +1901,8 @@ textarea {
   .method-cards,
   .mini-stats,
   .program-list,
+  .mini-course-grid,
+  .todai-catalog,
   .route-timeline,
   .book-grid,
   .policy-grid {
@@ -1658,6 +1921,10 @@ textarea {
 
   .photo-panel img {
     height: 380px;
+  }
+
+  .bundle-panel {
+    background: #f1fff9;
   }
 
   .sidebar {
@@ -1697,6 +1964,14 @@ textarea {
 
   .section {
     padding-block: 64px;
+  }
+
+  .course-thumb {
+    min-height: 138px;
+  }
+
+  .mini-course h4 {
+    min-height: auto;
   }
 }
 
