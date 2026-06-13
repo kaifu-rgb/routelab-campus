@@ -1677,9 +1677,24 @@ textarea {
 }
 
 .teacher-hero {
+  color: #ffffff;
   background:
-    linear-gradient(90deg, rgba(9, 24, 41, 0.94), rgba(9, 24, 41, 0.58)),
+    linear-gradient(90deg, rgba(4, 15, 31, 0.96), rgba(15, 47, 67, 0.82), rgba(9, 24, 41, 0.66)),
     url("assets/statement-photo.png") center / cover no-repeat;
+}
+
+.teacher-hero .eyebrow {
+  color: #ffd56b;
+}
+
+.teacher-hero h1 {
+  color: #ffffff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.34);
+}
+
+.teacher-hero .lead {
+  color: #eef7ff;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.24);
 }
 
 .page-hero .lead {
