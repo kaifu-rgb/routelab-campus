@@ -1764,6 +1764,51 @@ textarea {
   background: linear-gradient(180deg, #f1fff9, #ffffff);
 }
 
+.managed-content-section {
+  background: #ffffff;
+}
+
+.managed-content-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.managed-content-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 34px rgba(25, 37, 55, 0.08);
+}
+
+.managed-content-card img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.managed-content-card div {
+  padding: 22px;
+}
+
+.managed-content-card span {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.managed-content-card h3 {
+  margin-bottom: 10px;
+}
+
+.managed-content-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
 .material-note {
   grid-template-columns: minmax(0, 1fr) auto;
   border-top: 1px solid var(--line);
@@ -2013,6 +2058,7 @@ textarea {
   .program-list,
   .mini-course-grid,
   .todai-catalog,
+  .managed-content-grid,
   .route-timeline,
   .book-grid,
   .policy-grid {

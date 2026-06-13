@@ -210,6 +210,13 @@ h3 {
   gap: 22px;
 }
 
+.admin-shortcuts,
+.editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .stack,
 .form-grid {
   display: grid;
@@ -328,6 +335,67 @@ textarea {
   overflow-x: auto;
 }
 
+.content-editor-panel {
+  display: grid;
+  gap: 22px;
+}
+
+.page-copy-form {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.content-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.content-editor-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.content-preview {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.content-preview img {
+  width: 120px;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.content-preview strong,
+.content-preview span {
+  display: block;
+}
+
+.content-preview strong {
+  color: var(--green);
+  font-size: 13px;
+}
+
+.content-preview span {
+  color: #183454;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.add-card {
+  background: linear-gradient(135deg, #ffffff, #f0fbf7);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -349,6 +417,7 @@ th {
 @media (max-width: 880px) {
   .grid,
   .video-grid,
+  .content-editor-grid,
   .library-hero {
     grid-template-columns: 1fr;
   }
@@ -364,5 +433,13 @@ th {
 
   .member-nav {
     flex-wrap: wrap;
+  }
+
+  .content-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .content-preview img {
+    width: 100%;
   }
 }

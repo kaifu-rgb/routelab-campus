@@ -1,0 +1,60 @@
+{
+  "books": {
+    "heroTitle": "参考書は、増やすより使い切る。",
+    "heroLead": "今の学力、志望校、残り期間に合わせて、必要な参考書だけを選びます。教材を買って終わりにせず、解き直しと確認テストまで含めて運用します。",
+    "introTitle": "おすすめ参考書は、生徒の現在地で変わります。",
+    "introText": "英語・数学・国語・理科・社会を、基礎固め、演習量、入試形式、添削が必要な領域に分けて扱います。",
+    "items": [
+      {
+        "id": "book-english",
+        "title": "英語",
+        "subtitle": "単語・文法・長文を分けて管理",
+        "description": "単語帳、文法問題集、長文演習を同時に進めます。長文だけ増やしても読めない場合は、文法と語彙に戻します。",
+        "image": "/assets/study-colorful-student.png"
+      },
+      {
+        "id": "book-math",
+        "title": "数学",
+        "subtitle": "例題理解から入試演習へ",
+        "description": "計算、関数、図形を単元別に管理。解説を読んで分かった問題を、翌週に自力で解けるか確認します。",
+        "image": "/assets/route-planning-board.png"
+      },
+      {
+        "id": "book-japanese",
+        "title": "国語",
+        "subtitle": "読解・記述・作文を別ルートにする",
+        "description": "本文根拠、選択肢の消し方、記述の要素、作文構成を分けて練習します。感覚ではなく再現できる解き方に変えます。",
+        "image": "/assets/hero-kokugo.png"
+      }
+    ]
+  },
+  "routes": {
+    "heroTitle": "やる教材を決める。順番を決める。毎週、進める。",
+    "heroLead": "志望校、内申、模試、部活の忙しさまで見て、週ごとの学習量に落とし込みます。参考書を買って終わりにせず、確認テストと復習指示までセットで管理します。",
+    "introTitle": "参考書ルートは、教材リストではなく合格までの運用表です。",
+    "introText": "同じ教材でも、始める時期、解き直し回数、確認テストの入れ方で結果は変わります。",
+    "items": [
+      {
+        "id": "route-01",
+        "title": "01 現在地を測る",
+        "subtitle": "内申・模試・教材を確認",
+        "description": "学校成績、模試、志望校、今使っている教材を確認し、最初に伸ばす科目と単元を決めます。",
+        "image": "/assets/exam-study-photo.png"
+      },
+      {
+        "id": "route-02",
+        "title": "02 基礎を固める",
+        "subtitle": "戻る単元を明確にする",
+        "description": "英数の土台、国語の語彙と読解、理社の一問一答を短期間で回し、入試演習の前提を作ります。",
+        "image": "/assets/study-colorful-student.png"
+      },
+      {
+        "id": "route-03",
+        "title": "03 入試型へ移る",
+        "subtitle": "演習と解き直しを設計",
+        "description": "単元別演習から総合問題へ。間違えた問題は解説を読むだけで終わらせず、次に解ける状態まで戻します。",
+        "image": "/assets/statement-photo.png"
+      }
+    ]
+  }
+}

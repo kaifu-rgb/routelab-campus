@@ -5,16 +5,21 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const session = require("express-session");
+const multer = require("multer");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = __dirname;
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "data");
+const UPLOAD_DIR = path.join(ROOT, "uploads");
+const CONTENT_UPLOAD_DIR = path.join(UPLOAD_DIR, "content");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
 const VIDEOS_FILE = path.join(DATA_DIR, "videos.json");
+const CONTENT_FILE = path.join(DATA_DIR, "site-content.json");
 const SERVICE_NAME = "RouteLab Campus";
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
+fs.mkdirSync(CONTENT_UPLOAD_DIR, { recursive: true });
 
 function normalizeList(value) {
   if (Array.isArray(value)) return value;
@@ -57,12 +62,110 @@ function videos() {
   return normalizeList(readJson(VIDEOS_FILE, []));
 }
 
+function defaultContent() {
+  return {
+    books: {
+      heroTitle: "参考書は、増やすより使い切る。",
+      heroLead:
+        "今の学力、志望校、残り期間に合わせて、必要な参考書だけを選びます。教材を買って終わりにせず、解き直しと確認テストまで含めて運用します。",
+      introTitle: "おすすめ参考書は、生徒の現在地で変わります。",
+      introText:
+        "英語・数学・国語・理科・社会を、基礎固め、演習量、入試形式、添削が必要な領域に分けて扱います。",
+      items: [
+        {
+          id: "book-english",
+          title: "英語",
+          subtitle: "単語・文法・長文を分けて管理",
+          description:
+            "単語帳、文法問題集、長文演習を同時に進めます。長文だけ増やしても読めない場合は、文法と語彙に戻します。",
+          image: "/assets/study-colorful-student.png",
+        },
+        {
+          id: "book-math",
+          title: "数学",
+          subtitle: "例題理解から入試演習へ",
+          description:
+            "計算、関数、図形を単元別に管理。解説を読んで分かった問題を、翌週に自力で解けるか確認します。",
+          image: "/assets/route-planning-board.png",
+        },
+        {
+          id: "book-japanese",
+          title: "国語",
+          subtitle: "読解・記述・作文を別ルートにする",
+          description:
+            "本文根拠、選択肢の消し方、記述の要素、作文構成を分けて練習します。感覚ではなく再現できる解き方に変えます。",
+          image: "/assets/hero-kokugo.png",
+        },
+      ],
+    },
+    routes: {
+      heroTitle: "やる教材を決める。順番を決める。毎週、進める。",
+      heroLead:
+        "志望校、内申、模試、部活の忙しさまで見て、週ごとの学習量に落とし込みます。参考書を買って終わりにせず、確認テストと復習指示までセットで管理します。",
+      introTitle: "参考書ルートは、教材リストではなく合格までの運用表です。",
+      introText:
+        "同じ教材でも、始める時期、解き直し回数、確認テストの入れ方で結果は変わります。",
+      items: [
+        {
+          id: "route-01",
+          title: "01 現在地を測る",
+          subtitle: "内申・模試・教材を確認",
+          description:
+            "学校成績、模試、志望校、今使っている教材を確認し、最初に伸ばす科目と単元を決めます。",
+          image: "/assets/exam-study-photo.png",
+        },
+        {
+          id: "route-02",
+          title: "02 基礎を固める",
+          subtitle: "戻る単元を明確にする",
+          description:
+            "英数の土台、国語の語彙と読解、理社の一問一答を短期間で回し、入試演習の前提を作ります。",
+          image: "/assets/study-colorful-student.png",
+        },
+        {
+          id: "route-03",
+          title: "03 入試型へ移る",
+          subtitle: "演習と解き直しを設計",
+          description:
+            "単元別演習から総合問題へ。間違えた問題は解説を読むだけで終わらせず、次に解ける状態まで戻します。",
+          image: "/assets/statement-photo.png",
+        },
+      ],
+    },
+  };
+}
+
+function contentData() {
+  const fallback = defaultContent();
+  const saved = readJson(CONTENT_FILE, fallback);
+  return {
+    books: {
+      ...fallback.books,
+      ...(saved.books || {}),
+      items: normalizeList(saved.books && saved.books.items).length
+        ? normalizeList(saved.books.items)
+        : fallback.books.items,
+    },
+    routes: {
+      ...fallback.routes,
+      ...(saved.routes || {}),
+      items: normalizeList(saved.routes && saved.routes.items).length
+        ? normalizeList(saved.routes.items)
+        : fallback.routes.items,
+    },
+  };
+}
+
 function saveUsers(nextUsers) {
   writeJson(USERS_FILE, normalizeList(nextUsers));
 }
 
 function saveVideos(nextVideos) {
   writeJson(VIDEOS_FILE, normalizeList(nextVideos));
+}
+
+function saveContent(nextContent) {
+  writeJson(CONTENT_FILE, nextContent);
 }
 
 function seedAdmin() {
@@ -121,6 +224,24 @@ function youtubeEmbedUrl(videoId) {
   return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?rel=0&modestbranding=1`;
 }
 
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, CONTENT_UPLOAD_DIR),
+    filename: (req, file, cb) => {
+      const extension = path.extname(file.originalname || "").toLowerCase() || ".jpg";
+      cb(null, `${Date.now()}-${crypto.randomBytes(6).toString("hex")}${extension}`);
+    },
+  }),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!String(file.mimetype || "").startsWith("image/")) {
+      cb(new Error("画像ファイルを選んでください。"));
+      return;
+    }
+    cb(null, true);
+  },
+});
+
 seedAdmin();
 
 app.use(express.urlencoded({ extended: true }));
@@ -140,7 +261,7 @@ app.use(
 
 app.use("/member.css", express.static(path.join(ROOT, "member.css")));
 app.use("/assets", express.static(path.join(ROOT, "assets")));
-app.use(express.static(ROOT, { extensions: ["html"], index: "index.html" }));
+app.use("/uploads", express.static(UPLOAD_DIR));
 
 function currentUser(req) {
   if (!req.session.userId) return null;
@@ -160,7 +281,7 @@ function requireLogin(req, res, next) {
 function requireAdmin(req, res, next) {
   requireLogin(req, res, () => {
     if (req.user.role !== "admin") {
-      res.status(403).send(page("権限がありません", `<p class="alert">管理者のみアクセスできます。</p>`, req));
+      res.status(403).send(page("権限がありません", `<p class="alert">管理者だけがアクセスできます。</p>`, req));
       return;
     }
     next();
@@ -189,7 +310,7 @@ function page(title, content, req = null, bodyClass = "") {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${escapeHtml(title)} | ${SERVICE_NAME}</title>
-    <link rel="stylesheet" href="/member.css" />
+    <link rel="stylesheet" href="/member.css?v=20260613-content-admin" />
   </head>
   <body class="${escapeHtml(bodyClass)}">
     <div class="member-shell">
@@ -208,11 +329,170 @@ function page(title, content, req = null, bodyClass = "") {
 </html>`;
 }
 
+function publicSitePage(title, description, content) {
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="${escapeHtml(description)}" />
+    <title>${escapeHtml(title)} | RouteLab Campus</title>
+    <link rel="stylesheet" href="styles.css?v=20260613-content-admin" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="RouteLab Campus トップへ">
+        <img class="brand-logo" src="assets/routelab-campus-logo.svg" alt="RouteLab Campus" />
+      </a>
+      <nav class="nav" aria-label="主要メニュー">
+        <a href="routes.html">参考書ルート</a>
+        <a href="books.html">参考書紹介</a>
+        <a href="index.html#programs">講座紹介</a>
+        <a href="teacher.html">塾長メッセージ</a>
+        <a href="index.html#results">合格実績</a>
+        <a href="/login">会員ログイン</a>
+        <a href="index.html#contact">無料相談</a>
+      </nav>
+      <a class="header-cta" href="/login">動画ルームへ</a>
+    </header>
+    <main>${content}</main>
+    <footer class="site-footer">
+      <p>RouteLab Campus</p>
+      <p>授業動画・参考書ルート・進捗管理を組み合わせる高校受験キャンパス</p>
+    </footer>
+  </body>
+</html>`;
+}
+
 function flash(req) {
   const message = req.session.flash;
   delete req.session.flash;
   return message ? `<p class="alert success">${escapeHtml(message)}</p>` : "";
 }
+
+function renderContentCards(items, type) {
+  return normalizeList(items)
+    .map(
+      (item) => `<article class="managed-content-card ${escapeHtml(type)}">
+        <img src="${escapeHtml(item.image || "/assets/study-colorful-student.png")}" alt="${escapeHtml(item.title)}" />
+        <div>
+          <span>${escapeHtml(item.title)}</span>
+          <h3>${escapeHtml(item.subtitle)}</h3>
+          <p>${escapeHtml(item.description)}</p>
+        </div>
+      </article>`,
+    )
+    .join("");
+}
+
+function contentPage(type) {
+  const data = contentData()[type];
+  const isBooks = type === "books";
+  const title = isBooks ? "参考書紹介" : "参考書ルート";
+  const description = isBooks
+    ? "RouteLab Campusの参考書紹介。高校受験に必要な教材を、写真付きで分かりやすく紹介します。"
+    : "RouteLab Campusの参考書ルート。志望校から逆算した学習ルートを、写真付きで分かりやすく紹介します。";
+
+  return publicSitePage(
+    title,
+    description,
+    `<section class="page-hero ${isBooks ? "books-hero" : "route-hero"}">
+      <p class="eyebrow">${isBooks ? "Book Guide" : "Study Route"}</p>
+      <h1>${escapeHtml(data.heroTitle)}</h1>
+      <p class="lead">${escapeHtml(data.heroLead)}</p>
+    </section>
+
+    <section class="section managed-content-section">
+      <div class="section-heading centered">
+        <p class="eyebrow">${isBooks ? "教材設計" : "ルート設計"}</p>
+        <h2>${escapeHtml(data.introTitle)}</h2>
+        <p>${escapeHtml(data.introText)}</p>
+      </div>
+      <div class="managed-content-grid">${renderContentCards(data.items, type)}</div>
+    </section>
+
+    <section class="section material-note">
+      <div>
+        <p class="eyebrow">無料学習診断</p>
+        <h2>今の教材と志望校から、次の4週間でやることを整理します。</h2>
+        <p>参考書を増やす前に、今ある教材をどの順番で使い切るかを一緒に決めます。</p>
+      </div>
+      <a class="button primary" href="index.html#contact">相談する</a>
+    </section>`,
+  );
+}
+
+function pageEditor(type, data) {
+  const label = type === "books" ? "参考書紹介" : "参考書ルート";
+  const itemRows = normalizeList(data.items)
+    .map(
+      (item, index) => `<article class="content-editor-card">
+        <div class="content-preview">
+          <img src="${escapeHtml(item.image || "/assets/study-colorful-student.png")}" alt="" />
+          <div>
+            <strong>${escapeHtml(item.title)}</strong>
+            <span>${escapeHtml(item.subtitle)}</span>
+          </div>
+        </div>
+        <form class="form-grid" action="/admin/content/item" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="type" value="${escapeHtml(type)}" />
+          <input type="hidden" name="id" value="${escapeHtml(item.id)}" />
+          <input type="hidden" name="currentImage" value="${escapeHtml(item.image)}" />
+          <label>表示順<input type="number" name="order" value="${index + 1}" min="1" /></label>
+          <label>ラベル・科目<input name="title" value="${escapeHtml(item.title)}" required /></label>
+          <label>見出し<input name="subtitle" value="${escapeHtml(item.subtitle)}" required /></label>
+          <label>説明<textarea name="description" required>${escapeHtml(item.description)}</textarea></label>
+          <label>写真<input type="file" name="image" accept="image/*" /></label>
+          <div class="editor-actions">
+            <button class="button primary" type="submit">更新</button>
+            <button class="button danger" type="submit" name="delete" value="true">削除</button>
+          </div>
+        </form>
+      </article>`,
+    )
+    .join("");
+
+  return `<section class="panel content-editor-panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">${escapeHtml(label)}</p>
+        <h2>${escapeHtml(label)}を編集</h2>
+      </div>
+      <a class="button" href="/${type === "books" ? "books" : "routes"}.html" target="_blank">公開ページを見る</a>
+    </div>
+
+    <form class="form-grid page-copy-form" action="/admin/content/page" method="post">
+      <input type="hidden" name="type" value="${escapeHtml(type)}" />
+      <label>ページ冒頭の大見出し<input name="heroTitle" value="${escapeHtml(data.heroTitle)}" required /></label>
+      <label>ページ冒頭の説明<textarea name="heroLead" required>${escapeHtml(data.heroLead)}</textarea></label>
+      <label>カード一覧の見出し<input name="introTitle" value="${escapeHtml(data.introTitle)}" required /></label>
+      <label>カード一覧の説明<textarea name="introText" required>${escapeHtml(data.introText)}</textarea></label>
+      <button class="button primary" type="submit">ページ文章を更新</button>
+    </form>
+
+    <div class="content-editor-grid">${itemRows}</div>
+
+    <article class="content-editor-card add-card">
+      <h3>新しいカードを追加</h3>
+      <form class="form-grid" action="/admin/content/item" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="type" value="${escapeHtml(type)}" />
+        <label>ラベル・科目<input name="title" required placeholder="例：英語 / 01 現在地を測る" /></label>
+        <label>見出し<input name="subtitle" required placeholder="例：単語・文法・長文を分けて管理" /></label>
+        <label>説明<textarea name="description" required placeholder="ページに表示する説明文"></textarea></label>
+        <label>写真<input type="file" name="image" accept="image/*" /></label>
+        <button class="button primary" type="submit">カードを追加</button>
+      </form>
+    </article>
+  </section>`;
+}
+
+app.get(["/books", "/books.html"], (req, res) => {
+  res.send(contentPage("books"));
+});
+
+app.get(["/routes", "/routes.html"], (req, res) => {
+  res.send(contentPage("routes"));
+});
 
 app.get("/login", (req, res) => {
   const next = req.query.next || "/library";
@@ -336,15 +616,20 @@ app.get("/admin", requireAdmin, (req, res) => {
         <div>
           <p class="eyebrow">Admin</p>
           <h1>管理画面</h1>
-          <p class="lead">会員と動画を管理できます。</p>
+          <p class="lead">会員、動画、参考書ページを管理できます。</p>
         </div>
         ${flash(req)}
+        <div class="admin-shortcuts">
+          <a class="button primary" href="/admin/content">参考書ページを編集</a>
+          <a class="button" href="/books.html" target="_blank">参考書紹介を見る</a>
+          <a class="button" href="/routes.html" target="_blank">参考書ルートを見る</a>
+        </div>
         <div class="grid">
           <article class="panel">
             <h2>動画を追加</h2>
             <form class="form-grid" action="/admin/videos" method="post">
-              <label>タイトル<input name="title" required placeholder="例: 数学 関数の基礎" /></label>
-              <label>コース・分類<input name="course" placeholder="例: 中3数学 / 復習動画" /></label>
+              <label>タイトル<input name="title" required placeholder="例：数学 関数の基礎" /></label>
+              <label>コース・分類<input name="course" placeholder="例：中3数学 / 復習動画" /></label>
               <label>YouTube URL<input type="url" name="youtubeUrl" required placeholder="https://youtu.be/..." /></label>
               <label>説明<textarea name="description" placeholder="動画の内容を短く入力"></textarea></label>
               <label>公開状態<select name="published"><option value="true">公開する</option><option value="false">非公開で保存</option></select></label>
@@ -354,7 +639,7 @@ app.get("/admin", requireAdmin, (req, res) => {
           <article class="panel">
             <h2>会員を追加</h2>
             <form class="form-grid" action="/admin/users" method="post">
-              <label>名前<input name="name" required placeholder="例: 山田 太郎" /></label>
+              <label>名前<input name="name" required placeholder="例：山田 太郎" /></label>
               <label>メールアドレス<input type="email" name="email" required /></label>
               <label>初期パスワード<input type="text" name="password" required minlength="8" /></label>
               <button class="button primary" type="submit">会員を作成</button>
@@ -371,6 +656,32 @@ app.get("/admin", requireAdmin, (req, res) => {
         </article>
       </section>`,
       req,
+    ),
+  );
+});
+
+app.get("/admin/content", requireAdmin, (req, res) => {
+  const content = contentData();
+  res.send(
+    page(
+      "参考書ページ管理",
+      `<section class="stack">
+        <div>
+          <p class="eyebrow">Page Builder</p>
+          <h1>参考書ページ管理</h1>
+          <p class="lead">写真と文章を入れるだけで、参考書紹介・参考書ルートの公開ページに反映されます。</p>
+        </div>
+        ${flash(req)}
+        <div class="admin-shortcuts">
+          <a class="button" href="/admin">管理トップ</a>
+          <a class="button" href="/books.html" target="_blank">参考書紹介を見る</a>
+          <a class="button" href="/routes.html" target="_blank">参考書ルートを見る</a>
+        </div>
+        ${pageEditor("books", content.books)}
+        ${pageEditor("routes", content.routes)}
+      </section>`,
+      req,
+      "content-admin-page",
     ),
   );
 });
@@ -427,6 +738,75 @@ app.post("/admin/users", requireAdmin, (req, res) => {
   req.session.flash = "会員を作成しました。";
   res.redirect("/admin");
 });
+
+app.post("/admin/content/page", requireAdmin, (req, res) => {
+  const type = req.body.type === "routes" ? "routes" : "books";
+  const content = contentData();
+  content[type] = {
+    ...content[type],
+    heroTitle: String(req.body.heroTitle || "").trim(),
+    heroLead: String(req.body.heroLead || "").trim(),
+    introTitle: String(req.body.introTitle || "").trim(),
+    introText: String(req.body.introText || "").trim(),
+  };
+  saveContent(content);
+  req.session.flash = "ページ文章を更新しました。";
+  res.redirect("/admin/content");
+});
+
+app.post("/admin/content/item", requireAdmin, upload.single("image"), (req, res) => {
+  const type = req.body.type === "routes" ? "routes" : "books";
+  const content = contentData();
+  const items = normalizeList(content[type].items);
+  const id = String(req.body.id || "").trim() || crypto.randomUUID();
+  const uploadedImage = req.file ? `/uploads/content/${req.file.filename}` : "";
+
+  if (req.body.delete === "true") {
+    content[type].items = items.filter((item) => item.id !== id);
+    saveContent(content);
+    req.session.flash = "カードを削除しました。";
+    res.redirect("/admin/content");
+    return;
+  }
+
+  const nextItem = {
+    id,
+    title: String(req.body.title || "").trim(),
+    subtitle: String(req.body.subtitle || "").trim(),
+    description: String(req.body.description || "").trim(),
+    image: uploadedImage || String(req.body.currentImage || "").trim() || "/assets/study-colorful-student.png",
+  };
+
+  const existingIndex = items.findIndex((item) => item.id === id);
+  if (existingIndex >= 0) {
+    items[existingIndex] = nextItem;
+  } else {
+    items.push(nextItem);
+  }
+
+  const requestedOrder = Number(req.body.order || 0);
+  if (requestedOrder > 0) {
+    const currentIndex = items.findIndex((item) => item.id === id);
+    const [moved] = items.splice(currentIndex, 1);
+    items.splice(Math.min(requestedOrder - 1, items.length), 0, moved);
+  }
+
+  content[type].items = items;
+  saveContent(content);
+  req.session.flash = "カードを保存しました。";
+  res.redirect("/admin/content");
+});
+
+app.use((error, req, res, next) => {
+  if (req.path.startsWith("/admin/content")) {
+    req.session.flash = error.message || "画像のアップロードに失敗しました。";
+    res.redirect("/admin/content");
+    return;
+  }
+  next(error);
+});
+
+app.use(express.static(ROOT, { extensions: ["html"], index: "index.html" }));
 
 app.listen(PORT, () => {
   console.log(`${SERVICE_NAME} running at http://localhost:${PORT}`);
