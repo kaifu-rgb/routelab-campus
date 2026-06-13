@@ -1792,6 +1792,65 @@ textarea {
   font-weight: 900;
 }
 
+.founder-message {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.08fr);
+  gap: 32px;
+  align-items: start;
+  background: #ffffff;
+}
+
+.founder-card {
+  position: sticky;
+  top: 108px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.founder-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.founder-card > div {
+  padding: 24px;
+}
+
+.founder-card h2 {
+  margin-bottom: 4px;
+  font-size: clamp(32px, 5vw, 52px);
+}
+
+.founder-card p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.founder-letter {
+  padding: clamp(26px, 5vw, 46px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(241, 255, 249, 0.86), rgba(255, 255, 255, 0.96)),
+    #ffffff;
+}
+
+.founder-letter p {
+  margin: 0;
+  color: #344054;
+  font-size: 17px;
+  line-height: 2;
+}
+
+.founder-letter p + p {
+  margin-top: 20px;
+}
+
 .policy-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -1920,6 +1979,7 @@ textarea {
   .article-wrap,
   .split-feature,
   .instructor-profile,
+  .founder-message,
   .material-note,
   .exam-kokugo,
   .ai-chat-section,
@@ -1978,6 +2038,10 @@ textarea {
   }
 
   .sidebar {
+    position: static;
+  }
+
+  .founder-card {
     position: static;
   }
 }
