@@ -295,11 +295,13 @@ textarea {
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 18px;
 }
 
 .video-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.9fr);
   overflow: hidden;
 }
 
@@ -317,6 +319,32 @@ textarea {
 
 .video-copy {
   padding: 16px;
+}
+
+.video-material {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #cfe3ef;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.video-material h4 {
+  margin: 0 0 8px;
+  color: #17385f;
+  font-size: 15px;
+}
+
+.video-material p {
+  margin: 0;
+  color: #344054;
+  font-size: 14px;
+}
+
+.material-button {
+  justify-self: start;
 }
 
 .meta {
@@ -436,6 +464,10 @@ th {
   }
 
   .content-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .video-card {
     grid-template-columns: 1fr;
   }
 

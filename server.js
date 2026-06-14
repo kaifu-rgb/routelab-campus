@@ -13,6 +13,7 @@ const ROOT = __dirname;
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "data");
 const UPLOAD_DIR = path.join(ROOT, "uploads");
 const CONTENT_UPLOAD_DIR = path.join(UPLOAD_DIR, "content");
+const VIDEO_PDF_DIR = path.join(DATA_DIR, "video-pdfs");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
 const VIDEOS_FILE = path.join(DATA_DIR, "videos.json");
 const CONTENT_FILE = path.join(DATA_DIR, "site-content.json");
@@ -20,6 +21,7 @@ const SERVICE_NAME = "RouteLab Campus";
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(CONTENT_UPLOAD_DIR, { recursive: true });
+fs.mkdirSync(VIDEO_PDF_DIR, { recursive: true });
 
 function normalizeList(value) {
   if (Array.isArray(value)) return value;
@@ -226,14 +228,27 @@ function youtubeEmbedUrl(videoId) {
 
 const upload = multer({
   storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, CONTENT_UPLOAD_DIR),
+    destination: (req, file, cb) => {
+      cb(null, file.fieldname === "pdf" ? VIDEO_PDF_DIR : CONTENT_UPLOAD_DIR);
+    },
     filename: (req, file, cb) => {
-      const extension = path.extname(file.originalname || "").toLowerCase() || ".jpg";
+      const fallback = file.fieldname === "pdf" ? ".pdf" : ".jpg";
+      const extension = path.extname(file.originalname || "").toLowerCase() || fallback;
       cb(null, `${Date.now()}-${crypto.randomBytes(6).toString("hex")}${extension}`);
     },
   }),
-  limits: { fileSize: 8 * 1024 * 1024 },
+  limits: { fileSize: 16 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
+    const mime = String(file.mimetype || "");
+    if (file.fieldname === "pdf") {
+      if (mime !== "application/pdf" && path.extname(file.originalname || "").toLowerCase() !== ".pdf") {
+        cb(new Error("PDFファイルを選んでください。"));
+        return;
+      }
+      cb(null, true);
+      return;
+    }
+
     if (!String(file.mimetype || "").startsWith("image/")) {
       cb(new Error("画像ファイルを選んでください。"));
       return;
@@ -295,6 +310,11 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function formatTextBlock(value) {
+  const escaped = escapeHtml(value).trim();
+  return escaped ? escaped.replace(/\r?\n/g, "<br />") : "";
 }
 
 function page(title, content, req = null, bodyClass = "") {
@@ -552,6 +572,25 @@ app.get("/library", requireLogin, (req, res) => {
               <p class="meta">${escapeHtml(video.course || "動画講座")}</p>
               <h3>${escapeHtml(video.title)}</h3>
               <p class="muted">${escapeHtml(video.description)}</p>
+              ${
+                formatTextBlock(video.lessonText || "") || (video.pdfFileName && video.pdfOriginalName)
+                  ? `<div class="video-material">
+                    <div>
+                      <h4>この動画のテキスト</h4>
+                      ${
+                        formatTextBlock(video.lessonText || "")
+                          ? `<p>${formatTextBlock(video.lessonText || "")}</p>`
+                          : `<p class="muted">テキストは準備中です。</p>`
+                      }
+                    </div>
+                    ${
+                      video.pdfFileName && video.pdfOriginalName
+                        ? `<a class="button material-button" href="/library/materials/${encodeURIComponent(video.pdfFileName)}">PDFをダウンロード</a>`
+                        : ""
+                    }
+                  </div>`
+                  : ""
+              }
             </div>
           </article>`,
         )
@@ -583,6 +622,23 @@ app.get("/library", requireLogin, (req, res) => {
       "library-page",
     ),
   );
+});
+
+app.get("/library/materials/:file", requireLogin, (req, res) => {
+  const fileName = path.basename(String(req.params.file || ""));
+  const matchedVideo = videos().find((video) => video.pdfFileName === fileName);
+  if (!fileName || !matchedVideo) {
+    res.status(404).send(page("PDFが見つかりません", `<p class="alert">教材PDFが見つかりません。</p>`, req));
+    return;
+  }
+
+  const filePath = path.join(VIDEO_PDF_DIR, fileName);
+  if (!fs.existsSync(filePath)) {
+    res.status(404).send(page("PDFが見つかりません", `<p class="alert">教材PDFが見つかりません。</p>`, req));
+    return;
+  }
+
+  res.download(filePath, matchedVideo.pdfOriginalName || `${matchedVideo.title || "material"}.pdf`);
 });
 
 app.get("/admin", requireAdmin, (req, res) => {
@@ -627,10 +683,12 @@ app.get("/admin", requireAdmin, (req, res) => {
         <div class="grid">
           <article class="panel">
             <h2>動画を追加</h2>
-            <form class="form-grid" action="/admin/videos" method="post">
+            <form class="form-grid" action="/admin/videos" method="post" enctype="multipart/form-data">
               <label>タイトル<input name="title" required placeholder="例：数学 関数の基礎" /></label>
               <label>コース・分類<input name="course" placeholder="例：中3数学 / 復習動画" /></label>
               <label>YouTube URL<input type="url" name="youtubeUrl" required placeholder="https://youtu.be/..." /></label>
+              <label>動画横に表示するテキスト<textarea name="lessonText" placeholder="例: 重要語句、板書メモ、解き方の手順など"></textarea></label>
+              <label>教材PDF<input type="file" name="pdf" accept="application/pdf" /></label>
               <label>説明<textarea name="description" placeholder="動画の内容を短く入力"></textarea></label>
               <label>公開状態<select name="published"><option value="true">公開する</option><option value="false">非公開で保存</option></select></label>
               <button class="button primary" type="submit">追加する</button>
@@ -686,11 +744,14 @@ app.get("/admin/content", requireAdmin, (req, res) => {
   );
 });
 
-app.post("/admin/videos", requireAdmin, (req, res) => {
+app.post("/admin/videos", requireAdmin, upload.single("pdf"), (req, res) => {
   const youtubeUrl = String(req.body.youtubeUrl || "").trim();
   const youtubeId = extractYouTubeId(youtubeUrl);
 
   if (!youtubeId) {
+    if (req.file) {
+      fs.rmSync(req.file.path, { force: true });
+    }
     req.session.flash = "YouTubeのURLを確認してください。";
     res.redirect("/admin");
     return;
@@ -702,6 +763,9 @@ app.post("/admin/videos", requireAdmin, (req, res) => {
     title: String(req.body.title || "").trim(),
     course: String(req.body.course || "").trim(),
     description: String(req.body.description || "").trim(),
+    lessonText: String(req.body.lessonText || "").trim(),
+    pdfFileName: req.file ? req.file.filename : "",
+    pdfOriginalName: req.file ? req.file.originalname : "",
     youtubeUrl,
     youtubeId,
     published: req.body.published === "true",
@@ -798,6 +862,12 @@ app.post("/admin/content/item", requireAdmin, upload.single("image"), (req, res)
 });
 
 app.use((error, req, res, next) => {
+  if (req.path.startsWith("/admin/videos")) {
+    req.session.flash = error.message || "PDFのアップロードに失敗しました。";
+    res.redirect("/admin");
+    return;
+  }
+
   if (req.path.startsWith("/admin/content")) {
     req.session.flash = error.message || "画像のアップロードに失敗しました。";
     res.redirect("/admin/content");
