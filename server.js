@@ -18,6 +18,10 @@ const USERS_FILE = path.join(DATA_DIR, "users.json");
 const VIDEOS_FILE = path.join(DATA_DIR, "videos.json");
 const CONTENT_FILE = path.join(DATA_DIR, "site-content.json");
 const SERVICE_NAME = "RouteLab Campus";
+const SUPABASE_URL = String(process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const SUPABASE_STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "video-materials";
+const USE_SUPABASE_STORAGE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(CONTENT_UPLOAD_DIR, { recursive: true });
@@ -224,6 +228,51 @@ function extractYouTubeId(rawUrl) {
 
 function youtubeEmbedUrl(videoId) {
   return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?rel=0&modestbranding=1`;
+}
+
+function supabaseHeaders(extra = {}) {
+  return {
+    apikey: SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+    ...extra,
+  };
+}
+
+function supabaseObjectUrl(objectPath) {
+  return `${SUPABASE_URL}/storage/v1/object/${encodeURIComponent(SUPABASE_STORAGE_BUCKET)}/${String(objectPath)
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/")}`;
+}
+
+async function uploadVideoPdf(file) {
+  if (!file) return null;
+  if (!USE_SUPABASE_STORAGE) {
+    return { storage: "local", fileName: file.filename, objectPath: file.filename };
+  }
+
+  const objectPath = `pdfs/${file.filename}`;
+  const response = await fetch(supabaseObjectUrl(objectPath), {
+    method: "POST",
+    headers: supabaseHeaders({
+      "Content-Type": "application/pdf",
+      "x-upsert": "false",
+    }),
+    body: fs.readFileSync(file.path),
+  });
+
+  fs.rmSync(file.path, { force: true });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(`PDFの保存に失敗しました。Supabaseの設定を確認してください。${body ? ` (${body.slice(0, 160)})` : ""}`);
+  }
+
+  return { storage: "supabase", fileName: file.filename, objectPath };
+}
+
+function downloadFileName(name) {
+  return String(name || "material.pdf").replace(/[\\/\r\n"]/g, "_");
 }
 
 const upload = multer({
@@ -624,12 +673,34 @@ app.get("/library", requireLogin, (req, res) => {
   );
 });
 
-app.get("/library/materials/:file", requireLogin, (req, res) => {
+app.get("/library/materials/:file", requireLogin, async (req, res, next) => {
   const fileName = path.basename(String(req.params.file || ""));
   const matchedVideo = videos().find((video) => video.pdfFileName === fileName);
   if (!fileName || !matchedVideo) {
     res.status(404).send(page("PDFが見つかりません", `<p class="alert">教材PDFが見つかりません。</p>`, req));
     return;
+  }
+
+  if (matchedVideo.pdfStorage === "supabase") {
+    try {
+      const response = await fetch(supabaseObjectUrl(matchedVideo.pdfObjectPath || `pdfs/${fileName}`), {
+        headers: supabaseHeaders(),
+      });
+
+      if (!response.ok) {
+        res.status(404).send(page("PDF縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ", `<p class="alert">謨呎攝PDF縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ縲・/p>`, req));
+        return;
+      }
+
+      const buffer = Buffer.from(await response.arrayBuffer());
+      res.setHeader("Content-Type", response.headers.get("content-type") || "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${downloadFileName(matchedVideo.pdfOriginalName)}"`);
+      res.send(buffer);
+      return;
+    } catch (error) {
+      next(error);
+      return;
+    }
   }
 
   const filePath = path.join(VIDEO_PDF_DIR, fileName);
@@ -638,7 +709,7 @@ app.get("/library/materials/:file", requireLogin, (req, res) => {
     return;
   }
 
-  res.download(filePath, matchedVideo.pdfOriginalName || `${matchedVideo.title || "material"}.pdf`);
+  res.download(filePath, downloadFileName(matchedVideo.pdfOriginalName || `${matchedVideo.title || "material"}.pdf`));
 });
 
 app.get("/admin", requireAdmin, (req, res) => {
@@ -744,7 +815,7 @@ app.get("/admin/content", requireAdmin, (req, res) => {
   );
 });
 
-app.post("/admin/videos", requireAdmin, upload.single("pdf"), (req, res) => {
+app.post("/admin/videos", requireAdmin, upload.single("pdf"), async (req, res, next) => {
   const youtubeUrl = String(req.body.youtubeUrl || "").trim();
   const youtubeId = extractYouTubeId(youtubeUrl);
 
@@ -757,14 +828,18 @@ app.post("/admin/videos", requireAdmin, upload.single("pdf"), (req, res) => {
     return;
   }
 
-  const nextVideos = videos().filter((video) => video.id !== "seed-229850");
+  try {
+    const pdf = await uploadVideoPdf(req.file);
+    const nextVideos = videos().filter((video) => video.id !== "seed-229850");
   nextVideos.unshift({
     id: crypto.randomUUID(),
     title: String(req.body.title || "").trim(),
     course: String(req.body.course || "").trim(),
     description: String(req.body.description || "").trim(),
     lessonText: String(req.body.lessonText || "").trim(),
-    pdfFileName: req.file ? req.file.filename : "",
+    pdfStorage: pdf ? pdf.storage : "",
+    pdfFileName: pdf ? pdf.fileName : "",
+    pdfObjectPath: pdf ? pdf.objectPath : "",
     pdfOriginalName: req.file ? req.file.originalname : "",
     youtubeUrl,
     youtubeId,
@@ -772,7 +847,14 @@ app.post("/admin/videos", requireAdmin, upload.single("pdf"), (req, res) => {
     createdAt: new Date().toISOString(),
     createdBy: req.user.id,
   });
-  saveVideos(nextVideos);
+    saveVideos(nextVideos);
+  } catch (error) {
+    if (req.file) {
+      fs.rmSync(req.file.path, { force: true });
+    }
+    next(error);
+    return;
+  }
   req.session.flash = "動画を追加しました。";
   res.redirect("/admin");
 });
