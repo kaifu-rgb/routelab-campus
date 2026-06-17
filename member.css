@@ -103,6 +103,15 @@ img {
   background: #fff4f4;
 }
 
+.compact-button {
+  min-height: 34px;
+  padding: 6px 10px;
+}
+
+.inline-delete-form {
+  margin: 0;
+}
+
 .member-main {
   width: min(1160px, calc(100% - 36px));
   margin: 0 auto;

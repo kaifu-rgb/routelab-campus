@@ -271,6 +271,23 @@ async function uploadVideoPdf(file) {
   return { storage: "supabase", fileName: file.filename, objectPath };
 }
 
+async function deleteVideoPdf(video) {
+  if (!video || !video.pdfFileName) return;
+
+  if (video.pdfStorage === "supabase") {
+    if (!USE_SUPABASE_STORAGE) return;
+
+    const objectPath = video.pdfObjectPath || `pdfs/${video.pdfFileName}`;
+    await fetch(supabaseObjectUrl(objectPath), {
+      method: "DELETE",
+      headers: supabaseHeaders(),
+    }).catch(() => {});
+    return;
+  }
+
+  fs.rmSync(path.join(VIDEO_PDF_DIR, path.basename(video.pdfFileName)), { force: true });
+}
+
 function downloadFileName(name) {
   return String(name || "material.pdf").replace(/[\\/\r\n"]/g, "_");
 }
@@ -732,6 +749,12 @@ app.get("/admin", requireAdmin, (req, res) => {
         <td>${escapeHtml(video.course)}</td>
         <td>${video.published ? "公開" : "非公開"}</td>
         <td>${escapeHtml(new Date(video.createdAt).toLocaleString("ja-JP"))}</td>
+        <td>
+          <form class="inline-delete-form" action="/admin/videos/delete" method="post">
+            <input type="hidden" name="id" value="${escapeHtml(video.id)}" />
+            <button class="button danger compact-button" type="submit">削除</button>
+          </form>
+        </td>
       </tr>`,
     )
     .join("");
@@ -857,6 +880,27 @@ app.post("/admin/videos", requireAdmin, upload.single("pdf"), async (req, res, n
   }
   req.session.flash = "動画を追加しました。";
   res.redirect("/admin");
+});
+
+app.post("/admin/videos/delete", requireAdmin, async (req, res, next) => {
+  const id = String(req.body.id || "").trim();
+  const allVideos = videos();
+  const target = allVideos.find((video) => video.id === id);
+
+  if (!target) {
+    req.session.flash = "削除する動画が見つかりませんでした。";
+    res.redirect("/admin");
+    return;
+  }
+
+  try {
+    await deleteVideoPdf(target);
+    saveVideos(allVideos.filter((video) => video.id !== id));
+    req.session.flash = "動画を削除しました。";
+    res.redirect("/admin");
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post("/admin/users", requireAdmin, (req, res) => {
