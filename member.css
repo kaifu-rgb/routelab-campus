@@ -443,6 +443,18 @@ textarea {
   justify-self: start;
 }
 
+.material-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.secondary-button {
+  border-color: #cbd8e4;
+  color: #26364f;
+  background: #ffffff;
+}
+
 .meta {
   margin-bottom: 8px;
   color: var(--green);

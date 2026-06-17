@@ -292,6 +292,11 @@ function downloadFileName(name) {
   return String(name || "material.pdf").replace(/[\\/\r\n"]/g, "_");
 }
 
+function pdfDisposition(req, name) {
+  const mode = req.query.download === "1" ? "attachment" : "inline";
+  return `${mode}; filename="${downloadFileName(name)}"`;
+}
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
@@ -666,7 +671,10 @@ app.get("/library", requireLogin, (req, res) => {
                     </div>
                     ${
                       video.pdfFileName && video.pdfOriginalName
-                        ? `<a class="button material-button" href="/library/materials/${encodeURIComponent(video.pdfFileName)}">PDFをダウンロード</a>`
+                        ? `<div class="material-actions">
+                          <a class="button material-button" href="/library/materials/${encodeURIComponent(video.pdfFileName)}" target="_blank" rel="noopener">PDFを表示</a>
+                          <a class="button material-button secondary-button" href="/library/materials/${encodeURIComponent(video.pdfFileName)}?download=1">ダウンロード</a>
+                        </div>`
                         : ""
                     }
                   </div>`
@@ -726,7 +734,7 @@ app.get("/library/materials/:file", requireLogin, async (req, res, next) => {
 
       const buffer = Buffer.from(await response.arrayBuffer());
       res.setHeader("Content-Type", response.headers.get("content-type") || "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="${downloadFileName(matchedVideo.pdfOriginalName)}"`);
+      res.setHeader("Content-Disposition", pdfDisposition(req, matchedVideo.pdfOriginalName));
       res.send(buffer);
       return;
     } catch (error) {
@@ -741,7 +749,9 @@ app.get("/library/materials/:file", requireLogin, async (req, res, next) => {
     return;
   }
 
-  res.download(filePath, downloadFileName(matchedVideo.pdfOriginalName || `${matchedVideo.title || "material"}.pdf`));
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", pdfDisposition(req, matchedVideo.pdfOriginalName || `${matchedVideo.title || "material"}.pdf`));
+  res.sendFile(filePath);
 });
 
 app.get("/admin", requireAdmin, (req, res) => {
