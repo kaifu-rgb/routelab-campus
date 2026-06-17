@@ -745,6 +745,35 @@ app.get("/library/materials/:file", requireLogin, async (req, res, next) => {
 });
 
 app.get("/admin", requireAdmin, (req, res) => {
+  res.send(
+    page(
+      "管理メニュー",
+      `<section class="stack">
+        <div>
+          <p class="eyebrow">Admin</p>
+          <h1>管理メニュー</h1>
+          <p class="lead">作業ごとに管理画面を分けました。</p>
+        </div>
+        ${flash(req)}
+        <div class="admin-menu-grid">
+          <a class="admin-menu-card" href="/admin/videos">
+            <span>Video</span>
+            <strong>動画・会員管理</strong>
+            <p>動画追加、PDF教材、会員追加、閲覧講座の設定を行います。</p>
+          </a>
+          <a class="admin-menu-card" href="/admin/content">
+            <span>Pages</span>
+            <strong>参考書・ルート編集</strong>
+            <p>参考書紹介ページと参考書ルートページの文章・写真を編集します。</p>
+          </a>
+        </div>
+      </section>`,
+      req,
+    ),
+  );
+});
+
+app.get("/admin/videos", requireAdmin, (req, res) => {
   const allUsers = users();
   const allVideos = videos();
   const courseList = Array.from(new Set(allVideos.map((video) => courseName(video.course)).filter(Boolean))).sort((a, b) =>
@@ -899,7 +928,7 @@ app.post("/admin/videos", requireAdmin, upload.single("pdf"), async (req, res, n
       fs.rmSync(req.file.path, { force: true });
     }
     req.session.flash = "YouTubeのURLを確認してください。";
-    res.redirect("/admin");
+    res.redirect("/admin/videos");
     return;
   }
 
@@ -931,7 +960,7 @@ app.post("/admin/videos", requireAdmin, upload.single("pdf"), async (req, res, n
     return;
   }
   req.session.flash = "動画を追加しました。";
-  res.redirect("/admin");
+  res.redirect("/admin/videos");
 });
 
 app.post("/admin/videos/delete", requireAdmin, async (req, res, next) => {
@@ -941,7 +970,7 @@ app.post("/admin/videos/delete", requireAdmin, async (req, res, next) => {
 
   if (!target) {
     req.session.flash = "削除する動画が見つかりませんでした。";
-    res.redirect("/admin");
+    res.redirect("/admin/videos");
     return;
   }
 
@@ -949,7 +978,7 @@ app.post("/admin/videos/delete", requireAdmin, async (req, res, next) => {
     await deleteVideoPdf(target);
     saveVideos(allVideos.filter((video) => video.id !== id));
     req.session.flash = "動画を削除しました。";
-    res.redirect("/admin");
+    res.redirect("/admin/videos");
   } catch (error) {
     next(error);
   }
@@ -964,14 +993,14 @@ app.post("/admin/users/courses", requireAdmin, (req, res) => {
 
   if (!user) {
     req.session.flash = "講座を設定する会員が見つかりませんでした。";
-    res.redirect("/admin");
+    res.redirect("/admin/videos");
     return;
   }
 
   user.allowedCourses = Array.from(new Set(selectedCourses));
   saveUsers(nextUsers);
   req.session.flash = "閲覧できる講座を保存しました。";
-  res.redirect("/admin");
+  res.redirect("/admin/videos");
 });
 
 app.post("/admin/users", requireAdmin, (req, res) => {
@@ -982,7 +1011,7 @@ app.post("/admin/users", requireAdmin, (req, res) => {
 
   if (nextUsers.some((user) => user.email === email)) {
     req.session.flash = "同じメールアドレスの会員がすでに存在します。";
-    res.redirect("/admin");
+    res.redirect("/admin/videos");
     return;
   }
 
@@ -998,7 +1027,7 @@ app.post("/admin/users", requireAdmin, (req, res) => {
   });
   saveUsers(nextUsers);
   req.session.flash = "会員を作成しました。";
-  res.redirect("/admin");
+  res.redirect("/admin/videos");
 });
 
 app.post("/admin/content/page", requireAdmin, (req, res) => {
@@ -1062,7 +1091,7 @@ app.post("/admin/content/item", requireAdmin, upload.single("image"), (req, res)
 app.use((error, req, res, next) => {
   if (req.path.startsWith("/admin/videos")) {
     req.session.flash = error.message || "PDFのアップロードに失敗しました。";
-    res.redirect("/admin");
+    res.redirect("/admin/videos");
     return;
   }
 
