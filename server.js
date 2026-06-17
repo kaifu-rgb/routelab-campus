@@ -383,6 +383,21 @@ function formatTextBlock(value) {
   return escaped ? escaped.replace(/\r?\n/g, "<br />") : "";
 }
 
+function courseName(value) {
+  return String(value || "").trim();
+}
+
+function allowedCourses(user) {
+  return normalizeList(user && user.allowedCourses).map(courseName).filter(Boolean);
+}
+
+function canAccessVideo(user, video) {
+  if (!user || !video) return false;
+  if (user.role === "admin") return true;
+  const course = courseName(video.course);
+  return Boolean(video.published && course && allowedCourses(user).includes(course));
+}
+
 function page(title, content, req = null, bodyClass = "") {
   const user = req ? currentUser(req) : null;
   const adminLink = user && user.role === "admin" ? `<a href="/admin">管理</a>` : "";
@@ -621,7 +636,7 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/library", requireLogin, (req, res) => {
-  const visibleVideos = videos().filter((video) => video.published && video.youtubeId);
+  const visibleVideos = videos().filter((video) => video.youtubeId && canAccessVideo(req.user, video));
   const cards = visibleVideos.length
     ? visibleVideos
         .map(
@@ -693,7 +708,7 @@ app.get("/library", requireLogin, (req, res) => {
 app.get("/library/materials/:file", requireLogin, async (req, res, next) => {
   const fileName = path.basename(String(req.params.file || ""));
   const matchedVideo = videos().find((video) => video.pdfFileName === fileName);
-  if (!fileName || !matchedVideo) {
+  if (!fileName || !matchedVideo || !canAccessVideo(req.user, matchedVideo)) {
     res.status(404).send(page("PDFが見つかりません", `<p class="alert">教材PDFが見つかりません。</p>`, req));
     return;
   }
@@ -732,6 +747,9 @@ app.get("/library/materials/:file", requireLogin, async (req, res, next) => {
 app.get("/admin", requireAdmin, (req, res) => {
   const allUsers = users();
   const allVideos = videos();
+  const courseList = Array.from(new Set(allVideos.map((video) => courseName(video.course)).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b, "ja"),
+  );
   const userRows = allUsers
     .map(
       (user) => `<tr>
@@ -739,8 +757,37 @@ app.get("/admin", requireAdmin, (req, res) => {
         <td>${escapeHtml(user.email)}</td>
         <td>${escapeHtml(user.role)}</td>
         <td>${user.active ? "有効" : "停止"}</td>
+        <td>${allowedCourses(user).map(escapeHtml).join("<br />") || "-"}</td>
       </tr>`,
     )
+    .join("");
+  const accessRows = allUsers
+    .filter((user) => user.role !== "admin")
+    .map((user) => {
+      const currentCourses = allowedCourses(user);
+      const checkboxes = courseList.length
+        ? courseList
+            .map(
+              (course) => `<label class="course-check">
+                <input type="checkbox" name="courses" value="${escapeHtml(course)}" ${currentCourses.includes(course) ? "checked" : ""} />
+                <span>${escapeHtml(course)}</span>
+              </label>`,
+            )
+            .join("")
+        : `<p class="muted">先に動画を追加すると、ここに講座名が表示されます。</p>`;
+
+      return `<article class="access-card">
+        <div>
+          <h3>${escapeHtml(user.name)}</h3>
+          <p class="muted">${escapeHtml(user.email)}</p>
+        </div>
+        <form class="form-grid" action="/admin/users/courses" method="post">
+          <input type="hidden" name="userId" value="${escapeHtml(user.id)}" />
+          <div class="course-checks">${checkboxes}</div>
+          <button class="button primary compact-button" type="submit">閲覧講座を保存</button>
+        </form>
+      </article>`;
+    })
     .join("");
   const videoRows = allVideos
     .map(
@@ -798,13 +845,18 @@ app.get("/admin", requireAdmin, (req, res) => {
             </form>
           </article>
         </div>
+        <article class="panel access-panel">
+          <h2>会員ごとの閲覧講座</h2>
+          <p class="muted">チェックした講座だけ、その会員の動画ルームに表示されます。</p>
+          <div class="access-list">${accessRows || `<p class="alert">会員を追加すると、ここで閲覧講座を設定できます。</p>`}</div>
+        </article>
         <article class="panel table-wrap">
           <h2>動画一覧</h2>
-          <table><thead><tr><th>タイトル</th><th>分類</th><th>状態</th><th>登録日時</th></tr></thead><tbody>${videoRows}</tbody></table>
+          <table><thead><tr><th>タイトル</th><th>分類</th><th>状態</th><th>登録日時</th><th>操作</th></tr></thead><tbody>${videoRows}</tbody></table>
         </article>
         <article class="panel table-wrap">
           <h2>会員一覧</h2>
-          <table><thead><tr><th>名前</th><th>メール</th><th>権限</th><th>状態</th></tr></thead><tbody>${userRows}</tbody></table>
+          <table><thead><tr><th>名前</th><th>メール</th><th>権限</th><th>状態</th><th>閲覧講座</th></tr></thead><tbody>${userRows}</tbody></table>
         </article>
       </section>`,
       req,
@@ -903,6 +955,25 @@ app.post("/admin/videos/delete", requireAdmin, async (req, res, next) => {
   }
 });
 
+app.post("/admin/users/courses", requireAdmin, (req, res) => {
+  const userId = String(req.body.userId || "").trim();
+  const postedCourses = Array.isArray(req.body.courses) ? req.body.courses : req.body.courses ? [req.body.courses] : [];
+  const selectedCourses = postedCourses.map(courseName).filter(Boolean);
+  const nextUsers = users();
+  const user = nextUsers.find((candidate) => candidate.id === userId && candidate.role !== "admin");
+
+  if (!user) {
+    req.session.flash = "講座を設定する会員が見つかりませんでした。";
+    res.redirect("/admin");
+    return;
+  }
+
+  user.allowedCourses = Array.from(new Set(selectedCourses));
+  saveUsers(nextUsers);
+  req.session.flash = "閲覧できる講座を保存しました。";
+  res.redirect("/admin");
+});
+
 app.post("/admin/users", requireAdmin, (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   const name = String(req.body.name || "").trim();
@@ -922,6 +993,7 @@ app.post("/admin/users", requireAdmin, (req, res) => {
     passwordHash: createPasswordHash(password),
     role: "member",
     active: true,
+    allowedCourses: [],
     createdAt: new Date().toISOString(),
   });
   saveUsers(nextUsers);

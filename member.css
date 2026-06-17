@@ -112,6 +112,54 @@ img {
   margin: 0;
 }
 
+.access-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.access-list {
+  display: grid;
+  gap: 14px;
+}
+
+.access-card {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.45fr) minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.access-card h3 {
+  margin: 0 0 4px;
+}
+
+.course-checks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.course-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid #cbd8e4;
+  border-radius: 8px;
+  color: #26364f;
+  background: #f8fbff;
+  font-weight: 800;
+}
+
+.course-check input {
+  width: auto;
+  min-height: auto;
+}
+
 .member-main {
   width: min(1160px, calc(100% - 36px));
   margin: 0 auto;
@@ -477,6 +525,11 @@ th {
   }
 
   .video-card {
+    grid-template-columns: 1fr;
+  }
+
+  .access-card,
+  .course-checks {
     grid-template-columns: 1fr;
   }
 
