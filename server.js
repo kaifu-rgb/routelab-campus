@@ -592,6 +592,257 @@ function pageEditor(type, data) {
   </section>`;
 }
 
+function defaultContent() {
+  return {
+    books: {
+      heroTitle: "市販参考書を、目的別に選ぶ。",
+      heroLead:
+        "高校受験で使いやすい市販参考書を、科目・レベル・用途ごとに整理して紹介します。買って終わりではなく、どの順番で使うかまで見える形にします。",
+      introTitle: "おすすめ参考書リスト",
+      introText:
+        "ここには、塾長が実際にすすめたい市販参考書を追記していきます。科目、目的、使い方がすぐ分かるようにまとめます。",
+      items: [
+        {
+          id: "book-english-basic",
+          title: "英語 / 基礎固め",
+          subtitle: "英単語・英文法の土台を作る参考書",
+          description:
+            "英語が苦手な生徒は、長文に入る前に単語と文法の抜けを埋めます。短時間で毎日回せる教材を選び、確認テストまでセットで使います。",
+          image: "/assets/study-colorful-student.png",
+        },
+        {
+          id: "book-math-standard",
+          title: "数学 / 標準問題",
+          subtitle: "典型問題を自力で解けるようにする参考書",
+          description:
+            "解説を読んで終わりにせず、同じ解法を別問題で再現できるかを確認します。入試演習に入る前の計算力・関数・図形の土台作りに使います。",
+          image: "/assets/route-planning-board.png",
+        },
+        {
+          id: "book-japanese-writing",
+          title: "国語 / 読解・記述",
+          subtitle: "本文根拠を拾い、記述答案にする参考書",
+          description:
+            "感覚で読む状態から、設問ごとに根拠を探す読み方へ変えます。記述は模範解答の暗記ではなく、要素をそろえて書く練習にします。",
+          image: "/assets/hero-kokugo.png",
+        },
+      ],
+    },
+    routes: {
+      heroTitle: "参考書ルートを、合格までの順番にする。",
+      heroLead:
+        "おすすめ参考書を並べるだけではなく、いつ・何を・どこまで仕上げるかをルート化します。市販教材を、週ごとの学習計画に落とし込みます。",
+      introTitle: "参考書ルート一覧",
+      introText:
+        "志望校、現在の学力、残り期間に合わせて、使う参考書と順番を追記していきます。",
+      items: [
+        {
+          id: "route-saitama-select",
+          title: "埼玉県学校選択問題ルート",
+          subtitle: "基礎から学校選択問題の演習まで",
+          description:
+            "1. 基礎教材で単元の抜けを確認\n2. 標準問題集で典型解法を固める\n3. 学校選択問題レベルの演習へ進む\n4. 過去問と添削で答案を調整する",
+          image: "/assets/exam-study-photo.png",
+        },
+        {
+          id: "route-private-high",
+          title: "難関私立高校入試ルート",
+          subtitle: "標準問題から難問処理まで",
+          description:
+            "1. 科目ごとの基礎事項を短期で点検\n2. 私立入試頻出の形式に慣れる\n3. 難問の捨て問判断と時間配分を練習\n4. 志望校の過去問で得点戦略を固める",
+          image: "/assets/study-colorful-student.png",
+        },
+        {
+          id: "route-recovery",
+          title: "苦手科目立て直しルート",
+          subtitle: "今の教材から戻る場所を決める",
+          description:
+            "1. 模試と学校成績から弱点を特定\n2. つまずいた単元まで戻る\n3. 参考書を一冊に絞って反復\n4. 確認テストで次の教材へ進む判断をする",
+          image: "/assets/statement-photo.png",
+        },
+      ],
+    },
+  };
+}
+
+function renderMultiline(value) {
+  return escapeHtml(value || "").replace(/\n/g, "<br />");
+}
+
+function looksGarbled(value) {
+  return /縺|繧|蜿|繝|譁|邂|隕|謨|鬆|莉|蛻/.test(String(value || ""));
+}
+
+function looksLegacyContent(saved, fallbackSection) {
+  const title = String((saved && saved.heroTitle) || "");
+  const itemIds = normalizeList(saved && saved.items).map((item) => item.id);
+  const oldIds = ["book-english", "book-math", "book-japanese", "route-01", "route-02", "route-03"];
+  return (
+    title.includes("参考書は、増やすより") ||
+    title.includes("やる教材を決める") ||
+    (itemIds.length > 0 && itemIds.every((id) => oldIds.includes(id))) ||
+    looksGarbled(title || fallbackSection.heroTitle)
+  );
+}
+
+function cleanContentSection(savedSection, fallbackSection) {
+  const saved = savedSection || {};
+  if (looksLegacyContent(saved, fallbackSection)) return fallbackSection;
+  const savedItems = normalizeList(saved.items);
+  const useSavedItems = savedItems.length && !savedItems.some((item) =>
+    looksGarbled(`${item.title || ""} ${item.subtitle || ""} ${item.description || ""}`),
+  );
+  return {
+    ...fallbackSection,
+    ...saved,
+    heroTitle: looksGarbled(saved.heroTitle) ? fallbackSection.heroTitle : saved.heroTitle || fallbackSection.heroTitle,
+    heroLead: looksGarbled(saved.heroLead) ? fallbackSection.heroLead : saved.heroLead || fallbackSection.heroLead,
+    introTitle: looksGarbled(saved.introTitle) ? fallbackSection.introTitle : saved.introTitle || fallbackSection.introTitle,
+    introText: looksGarbled(saved.introText) ? fallbackSection.introText : saved.introText || fallbackSection.introText,
+    items: useSavedItems ? savedItems : fallbackSection.items,
+  };
+}
+
+function contentData() {
+  const fallback = defaultContent();
+  const saved = readJson(CONTENT_FILE, fallback);
+  return {
+    books: cleanContentSection(saved.books, fallback.books),
+    routes: cleanContentSection(saved.routes, fallback.routes),
+  };
+}
+
+function renderContentCards(items, type) {
+  const isBooks = type === "books";
+  return normalizeList(items)
+    .map((item) => {
+      const image = item.image || "/assets/study-colorful-student.png";
+      const badge = item.title || (isBooks ? "科目・用途" : "対象");
+      const heading = item.subtitle || (isBooks ? "参考書名" : "ルート名");
+      const body = item.description || "";
+      return `<article class="managed-content-card ${escapeHtml(type)}">
+        <img src="${escapeHtml(image)}" alt="${escapeHtml(heading)}" />
+        <div>
+          <span>${escapeHtml(badge)}</span>
+          <h3>${escapeHtml(heading)}</h3>
+          <p>${renderMultiline(body)}</p>
+        </div>
+      </article>`;
+    })
+    .join("");
+}
+
+function contentPage(type) {
+  const data = contentData()[type];
+  const isBooks = type === "books";
+  const title = isBooks ? "参考書紹介" : "参考書ルート";
+  const description = isBooks
+    ? "RouteLab Campusの参考書紹介。市販参考書のおすすめを、科目・用途別に紹介します。"
+    : "RouteLab Campusの参考書ルート。市販参考書を使う順番を、志望校別に整理します。";
+
+  return publicSitePage(
+    title,
+    description,
+    `<section class="page-hero ${isBooks ? "books-hero" : "route-hero"}">
+      <p class="eyebrow">${isBooks ? "Book Guide" : "Study Route"}</p>
+      <h1>${escapeHtml(data.heroTitle)}</h1>
+      <p class="lead">${escapeHtml(data.heroLead)}</p>
+    </section>
+
+    <section class="section managed-content-section">
+      <div class="section-heading centered">
+        <p class="eyebrow">${isBooks ? "市販参考書のおすすめ" : "教材の進め方"}</p>
+        <h2>${escapeHtml(data.introTitle)}</h2>
+        <p>${escapeHtml(data.introText)}</p>
+      </div>
+      <div class="managed-content-grid">${renderContentCards(data.items, type)}</div>
+    </section>
+
+    <section class="section material-note">
+      <div>
+        <p class="eyebrow">無料学習診断</p>
+        <h2>${isBooks ? "参考書を買う前に、今やる一冊を決めます。" : "参考書の順番を、志望校から逆算します。"}</h2>
+        <p>${isBooks ? "今の学力、志望校、残り期間に合わせて、市販教材をどう使うか整理します。" : "教材を増やす前に、使う順番と週ごとの到達目標を一緒に決めます。"}</p>
+      </div>
+      <a class="button primary" href="index.html#contact">相談する</a>
+    </section>`,
+  );
+}
+
+function pageEditor(type, data) {
+  const isBooks = type === "books";
+  const label = isBooks ? "参考書紹介" : "参考書ルート";
+  const titleLabel = isBooks ? "科目・用途" : "対象・ルート分類";
+  const subtitleLabel = isBooks ? "参考書名" : "ルート名";
+  const descriptionLabel = isBooks ? "おすすめ理由・使い方" : "使う参考書と進める順番";
+  const titlePlaceholder = isBooks ? "例：英語 / 長文読解" : "例：埼玉県学校選択問題";
+  const subtitlePlaceholder = isBooks ? "例：高校入試 英語長文レベル別問題集" : "例：学校選択問題 数学完成ルート";
+  const descriptionPlaceholder = isBooks
+    ? "どんな生徒にすすめるか、どの時期にどう使うかを書く"
+    : "例：1. 基礎教材を仕上げる\n2. 標準問題集で典型問題を固める\n3. 過去問演習に進む";
+
+  const itemRows = normalizeList(data.items)
+    .map(
+      (item, index) => `<article class="content-editor-card">
+        <div class="content-preview">
+          <img src="${escapeHtml(item.image || "/assets/study-colorful-student.png")}" alt="" />
+          <div>
+            <strong>${escapeHtml(item.title)}</strong>
+            <span>${escapeHtml(item.subtitle)}</span>
+          </div>
+        </div>
+        <form class="form-grid" action="/admin/content/item" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="type" value="${escapeHtml(type)}" />
+          <input type="hidden" name="id" value="${escapeHtml(item.id)}" />
+          <input type="hidden" name="currentImage" value="${escapeHtml(item.image)}" />
+          <label>表示順<input type="number" name="order" value="${index + 1}" min="1" /></label>
+          <label>${escapeHtml(titleLabel)}<input name="title" value="${escapeHtml(item.title)}" required /></label>
+          <label>${escapeHtml(subtitleLabel)}<input name="subtitle" value="${escapeHtml(item.subtitle)}" required /></label>
+          <label>${escapeHtml(descriptionLabel)}<textarea name="description" required>${escapeHtml(item.description)}</textarea></label>
+          <label>${isBooks ? "表紙・参考画像" : "ルート画像"}<input type="file" name="image" accept="image/*" /></label>
+          <div class="editor-actions">
+            <button class="button primary" type="submit">保存</button>
+            <button class="button danger" type="submit" name="delete" value="true">削除</button>
+          </div>
+        </form>
+      </article>`,
+    )
+    .join("");
+
+  return `<section class="panel content-editor-panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">${escapeHtml(label)}</p>
+        <h2>${isBooks ? "市販参考書を追加する" : "参考書ルートを追加する"}</h2>
+      </div>
+      <a class="button" href="/${isBooks ? "books" : "routes"}.html" target="_blank">公開ページを見る</a>
+    </div>
+
+    <form class="form-grid page-copy-form" action="/admin/content/page" method="post">
+      <input type="hidden" name="type" value="${escapeHtml(type)}" />
+      <label>ページ上部の見出し<input name="heroTitle" value="${escapeHtml(data.heroTitle)}" required /></label>
+      <label>ページ上部の説明<textarea name="heroLead" required>${escapeHtml(data.heroLead)}</textarea></label>
+      <label>一覧の見出し<input name="introTitle" value="${escapeHtml(data.introTitle)}" required /></label>
+      <label>一覧の説明<textarea name="introText" required>${escapeHtml(data.introText)}</textarea></label>
+      <button class="button primary" type="submit">ページ文言を保存</button>
+    </form>
+
+    <article class="content-editor-card add-card">
+      <h3>${isBooks ? "新しい市販参考書を追加" : "新しい参考書ルートを追加"}</h3>
+      <form class="form-grid" action="/admin/content/item" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="type" value="${escapeHtml(type)}" />
+        <label>${escapeHtml(titleLabel)}<input name="title" required placeholder="${escapeHtml(titlePlaceholder)}" /></label>
+        <label>${escapeHtml(subtitleLabel)}<input name="subtitle" required placeholder="${escapeHtml(subtitlePlaceholder)}" /></label>
+        <label>${escapeHtml(descriptionLabel)}<textarea name="description" required placeholder="${escapeHtml(descriptionPlaceholder)}"></textarea></label>
+        <label>${isBooks ? "表紙・参考画像" : "ルート画像"}<input type="file" name="image" accept="image/*" /></label>
+        <button class="button primary" type="submit">${isBooks ? "参考書を追加" : "ルートを追加"}</button>
+      </form>
+    </article>
+
+    <div class="content-editor-grid">${itemRows}</div>
+  </section>`;
+}
+
 app.get(["/books", "/books.html"], (req, res) => {
   res.send(contentPage("books"));
 });
@@ -912,6 +1163,32 @@ app.get("/admin/content", requireAdmin, (req, res) => {
         <div>
           <p class="eyebrow">Page Builder</p>
           <h1>参考書ページ管理</h1>
+          <p class="lead">市販参考書のおすすめと、参考書ルートをここから書き足せます。画像を入れると公開ページのカードにも反映されます。</p>
+        </div>
+        ${flash(req)}
+        <div class="admin-shortcuts">
+          <a class="button" href="/admin">管理トップ</a>
+          <a class="button" href="/books.html" target="_blank">参考書紹介を見る</a>
+          <a class="button" href="/routes.html" target="_blank">参考書ルートを見る</a>
+        </div>
+        ${pageEditor("books", content.books)}
+        ${pageEditor("routes", content.routes)}
+      </section>`,
+      req,
+      "content-admin-page",
+    ),
+  );
+});
+
+app.get("/admin/content-old", requireAdmin, (req, res) => {
+  const content = contentData();
+  res.send(
+    page(
+      "参考書ページ管理",
+      `<section class="stack">
+        <div>
+          <p class="eyebrow">Page Builder</p>
+          <h1>参考書ページ管理</h1>
           <p class="lead">写真と文章を入れるだけで、参考書紹介・参考書ルートの公開ページに反映されます。</p>
         </div>
         ${flash(req)}
@@ -1051,11 +1328,69 @@ app.post("/admin/content/page", requireAdmin, (req, res) => {
     introText: String(req.body.introText || "").trim(),
   };
   saveContent(content);
+  req.session.flash = "ページ文言を保存しました。";
+  res.redirect("/admin/content");
+});
+
+app.post("/admin/content/page-old", requireAdmin, (req, res) => {
+  const type = req.body.type === "routes" ? "routes" : "books";
+  const content = contentData();
+  content[type] = {
+    ...content[type],
+    heroTitle: String(req.body.heroTitle || "").trim(),
+    heroLead: String(req.body.heroLead || "").trim(),
+    introTitle: String(req.body.introTitle || "").trim(),
+    introText: String(req.body.introText || "").trim(),
+  };
+  saveContent(content);
   req.session.flash = "ページ文章を更新しました。";
   res.redirect("/admin/content");
 });
 
 app.post("/admin/content/item", requireAdmin, upload.single("image"), (req, res) => {
+  const type = req.body.type === "routes" ? "routes" : "books";
+  const content = contentData();
+  const items = normalizeList(content[type].items);
+  const id = String(req.body.id || "").trim() || crypto.randomUUID();
+  const uploadedImage = req.file ? `/uploads/content/${req.file.filename}` : "";
+
+  if (req.body.delete === "true") {
+    content[type].items = items.filter((item) => item.id !== id);
+    saveContent(content);
+    req.session.flash = type === "books" ? "参考書を削除しました。" : "参考書ルートを削除しました。";
+    res.redirect("/admin/content");
+    return;
+  }
+
+  const nextItem = {
+    id,
+    title: String(req.body.title || "").trim(),
+    subtitle: String(req.body.subtitle || "").trim(),
+    description: String(req.body.description || "").trim(),
+    image: uploadedImage || String(req.body.currentImage || "").trim() || "/assets/study-colorful-student.png",
+  };
+
+  const existingIndex = items.findIndex((item) => item.id === id);
+  if (existingIndex >= 0) {
+    items[existingIndex] = nextItem;
+  } else {
+    items.push(nextItem);
+  }
+
+  const requestedOrder = Number(req.body.order || 0);
+  if (requestedOrder > 0) {
+    const currentIndex = items.findIndex((item) => item.id === id);
+    const [moved] = items.splice(currentIndex, 1);
+    items.splice(Math.min(requestedOrder - 1, items.length), 0, moved);
+  }
+
+  content[type].items = items;
+  saveContent(content);
+  req.session.flash = type === "books" ? "参考書を保存しました。" : "参考書ルートを保存しました。";
+  res.redirect("/admin/content");
+});
+
+app.post("/admin/content/item-old", requireAdmin, upload.single("image"), (req, res) => {
   const type = req.body.type === "routes" ? "routes" : "books";
   const content = contentData();
   const items = normalizeList(content[type].items);
