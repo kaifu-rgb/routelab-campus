@@ -202,6 +202,45 @@ function seedAdmin() {
   }
 }
 
+function seedPermanentMembers() {
+  const permanentMembers = [
+    {
+      id: "member-riho",
+      name: "riho",
+      email: "riho@kokudai",
+      password: "riho0802",
+      grantAllCourses: true,
+    },
+  ];
+  const existing = users();
+  let changed = false;
+
+  for (const member of permanentMembers) {
+    const email = member.email.toLowerCase();
+    const current = existing.find((user) => user.email === email);
+    const nextFields = {
+      id: current ? current.id : member.id,
+      name: current && current.name ? current.name : member.name,
+      email,
+      passwordHash: createPasswordHash(member.password),
+      role: "member",
+      active: true,
+      allowedCourses: current && current.allowedCourses ? current.allowedCourses : [],
+      grantAllCourses: Boolean(member.grantAllCourses),
+      createdAt: current && current.createdAt ? current.createdAt : new Date().toISOString(),
+    };
+
+    if (current) {
+      Object.assign(current, nextFields);
+    } else {
+      existing.push(nextFields);
+    }
+    changed = true;
+  }
+
+  if (changed) saveUsers(existing);
+}
+
 function extractYouTubeId(rawUrl) {
   const value = String(rawUrl || "").trim();
   if (!value) return "";
@@ -329,6 +368,7 @@ const upload = multer({
 });
 
 seedAdmin();
+seedPermanentMembers();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -399,6 +439,7 @@ function allowedCourses(user) {
 function canAccessVideo(user, video) {
   if (!user || !video) return false;
   if (user.role === "admin") return true;
+  if (user.grantAllCourses) return Boolean(video.published);
   const course = courseName(video.course);
   return Boolean(video.published && course && allowedCourses(user).includes(course));
 }
@@ -862,7 +903,7 @@ app.get("/login", (req, res) => {
         <h1>動画ルームにログイン</h1>
         <p class="lead">会員専用の授業動画と学習ルートを確認できます。</p>
         ${message}
-        <form class="form-grid" action="/login" method="post">
+        <form class="form-grid" action="/login" method="post" novalidate>
           <input type="hidden" name="next" value="${escapeHtml(next)}" />
           <label>メールアドレス<input type="email" name="email" autocomplete="email" required /></label>
           <label>パスワード<input type="password" name="password" autocomplete="current-password" required /></label>
